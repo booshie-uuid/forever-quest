@@ -54,6 +54,9 @@ class MapGenerator
         this.map.currentX = spawnRoom.x;
         this.map.currentY = spawnRoom.y;
 
+        // remove the spawn room from the list of available deadends
+        deadends = deadends.filter(room => room !== spawnRoom);
+
         // sort deadends by their distance from the spawn room
         // this will let us place rarer events further away from spawn
         deadends.sort((roomA, roomB) => {
@@ -63,6 +66,7 @@ class MapGenerator
         });
 
         // place the exit room at the farthest deadend from the spawn room
+        // using shift() so that the exit room is removed from the list of available deadends
         const exitRoom = deadends.shift();
 
         exitRoom.type = Feature.TYPES.EXIT;
@@ -78,44 +82,44 @@ class MapGenerator
             const index = this.chance.biasedRange(0, deadends.length - 1);
             const room = deadends[index];
 
-            // remove the chosen deadend from the list of deadends so we don't pick it again
+            // remove the chosen deadend from the list of available deadends
             deadends.splice(index, 1);
 
-            // legendary treasures
             if(this.map.undiscoveredLegendaryTreasures < this.map.maxLegendaryTreasures)
             {
+                // legendary treasures
                 this.generateEncounter(room, Feature.TYPES.TREASURE_LEGENDARY);
                 this.map.undiscoveredLegendaryTreasures++;
             }
-            // legendary enemies
             else if(this.map.undefeatedLegendaryEnemies < this.map.maxLegendaryEnemies)
             {
+                // legendary enemies
                 this.generateEncounter(room, Encounter.TYPES.ENEMY_LEGENDARY);
                 this.map.undefeatedLegendaryEnemies++;
             }
-            // epic enemies
             else if(this.map.undefeatedEpicEnemies < this.map.maxEpicEnemies)
             {
+                // epic enemies
                 this.generateEncounter(room, Encounter.TYPES.ENEMY_EPIC);
                 this.map.undefeatedEpicEnemies++;
             }
-            // epic treasures
             else if(this.map.undiscoveredEpicTreasures < this.map.maxEpicTreasures)
             {
+                // epic treasures
                 this.generateEncounter(room, Feature.TYPES.TREASURE_EPIC);
                 this.map.undiscoveredEpicTreasures++;
             }
-            // rare treasures
-            else if(this.map.undiscoveredRareTreasures < this.map.maxRareTreasures)
-            {
-                this.generateEncounter(room, Feature.TYPES.TREASURE_RARE);
-                this.map.undiscoveredRareTreasures++;
-            }
-            // rare enemies
             else if(this.map.undefeatedRareEnemies < this.map.maxRareEnemies)
             {
+                // rare enemies
                 this.generateEncounter(room, Encounter.TYPES.ENEMY_RARE);
                 this.map.undefeatedRareEnemies++;
+            }
+            else if(this.map.undiscoveredRareTreasures < this.map.maxRareTreasures)
+            {
+                // rare treasures
+                this.generateEncounter(room, Feature.TYPES.TREASURE_RARE);
+                this.map.undiscoveredRareTreasures++;
             }
             else
             {
@@ -125,20 +129,13 @@ class MapGenerator
             }
         }
 
+        console.log(this.map.undefeatedLegendaryEnemies + this.map.undefeatedEpicEnemies + this.map.undefeatedRareEnemies);
+
         // explore the spawn room
         this.map.exploreRoom(spawnRoom.x, spawnRoom.y);
 
-        // explore all the rooms if debug mode is enabled
-        if(this.map.debug)
-        {
-            for(let y = 0; y < this.map.gridRows - 1; y++)
-            {
-                for(let x = 0; x < this.map.gridCols - 1; x++)
-                {
-                    this.map.exploreRoom(x, y);
-                }
-            }
-        }
+        // handle any debug requirements
+        this.handleDebug();
 
         // set the map state to ready
         this.map.state = Map.STATES.MAP_READY;
@@ -402,7 +399,25 @@ class MapGenerator
     
     generateEncounter(room, type)
     {
+        if(room.type > 100)
+            console.log("overwrite detected");
+
         room.type = type;
         this.map.updateRoom(room);
     }
+
+    handleDebug()
+    {
+        if(!ENV.DEBUG) { return; }
+
+        // explore all the rooms
+        for(let y = 0; y < this.map.gridRows; y++)
+        {
+            for(let x = 0; x < this.map.gridCols; x++)
+            {
+                this.map.exploreRoom(x, y);
+            }
+        }
+    }
+
 }

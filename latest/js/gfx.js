@@ -63,6 +63,14 @@ class GFX
         this.context.stroke();
     }
 
+    drawRectangleOutline(x, y, w, h, strokeColour, strokeWidth)
+    {
+        this.context.lineCap = "square";
+        this.context.lineWidth = strokeWidth;
+        this.context.strokeStyle = strokeColour;
+        this.context.strokeRect(x, y, w, h);
+    }
+
     drawRoundedRectangle(x, y, width, height, radius, strokeStyle, fill, fillStyle)
     {
         this.context.beginPath();

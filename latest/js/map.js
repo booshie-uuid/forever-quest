@@ -47,8 +47,6 @@ class Map
 
     constructor(gfx, seed)
     {
-        this.debug = true;
-
         this.gfx = gfx;
         this.chance = new SharedChance(seed);
 
@@ -337,54 +335,44 @@ class Map
         return events;
     }
 
-    drawFeature(room, drawX, drawY)
+    draw()
     {
-        const feature = this.getFeature(room);
+        this.gfx.fillBackground(this.biome.theme.backgroundColor);
 
-        // yeild if the feature could not be found
-        if(feature == null) { return; }
+        for(let gridY = 0; gridY < this.gridRows; gridY++)
+        {    
+            for(let gridX = 0; gridX < this.gridCols; gridX++)
+            {
+                const room = this.getRoom(gridX, gridY);
 
-        const spriteX = feature.spriteX;
-        const spriteY = feature.spriteY;
+                if(room === null || room.type == 0 || (!ENV.DEBUG && room.status == 0)) { continue; }
 
-        this.gfx.drawSprite(this.texture, spriteX, spriteY, drawX + 1, drawY + 1, 36, 36);
+                this.drawRoom(room);
+            }
+        }
+
+        this.drawHighlights();
+        this.drawDebugHighlights();
     }
 
-    drawEncounter(room, drawX, drawY)
-    {
-        const encounter = this.getEncounter(room);
-
-        // yield if the encounter is not found
-        if(encounter === null) { return; }
-
-        const spriteX = encounter.spriteX;
-        const spriteY = encounter.spriteY;
-        const spriteOffsetX = (typeof encounter.spriteOffsetX !== "undefined" && encounter.spriteOffsetX != null)? encounter.spriteOffsetX: 0;
-        const spriteOffsetY = (typeof encounter.spriteOffsetY !== "undefined" && encounter.spriteOffsetY != null)? encounter.spriteOffsetY: 0;
-
-        this.gfx.drawSprite(this.texture, spriteX, spriteY, drawX + 3 + spriteOffsetX, drawY - 8 + spriteOffsetY);
-    }
-    
     drawRoom(room)
     {
-        const w = 38;
-        const h = 38;
-        const drawX = room.x * w;
-        const drawY = room.y * h;
+        const roomWidth = 38;
+        const roomHeight = 38;
+        const drawX = room.x * roomWidth;
+        const drawY = room.y * roomHeight;
 
-        const northNeighbor    = this.getRoom(room.x, room.y - 1);
-        const eastNeighbor    = this.getRoom(room.x + 1, room.y);
-        const southNeighbor    = this.getRoom(room.x, room.y + 1);
-        const westNeighbor    = this.getRoom(room.x - 1, room.y);
+        const northNeighbor = this.getRoom(room.x, room.y - 1);
+        const eastNeighbor = this.getRoom(room.x + 1, room.y);
+        const southNeighbor = this.getRoom(room.x, room.y + 1);
+        const westNeighbor = this.getRoom(room.x - 1, room.y);
         
         if(northNeighbor !== null && northNeighbor.type != 0 && northNeighbor.status == 0) { this.drawRoomShadow(northNeighbor); }
         if(eastNeighbor !== null && eastNeighbor.type != 0 && eastNeighbor.status == 0) { this.drawRoomShadow(eastNeighbor); }
         if(southNeighbor !== null && southNeighbor.type != 0 && southNeighbor.status == 0) { this.drawRoomShadow(southNeighbor); }
         if(westNeighbor !== null && westNeighbor.type != 0 && westNeighbor.status == 0) { this.drawRoomShadow(westNeighbor); }
 
-        const wallColor = (this.currentX == room.x && this.currentY == room.y)? "#fab40b": this.biome.theme.backgroundColor;
-
-        this.gfx.drawRectangle(drawX, drawY, 38, 38, wallColor);
+        this.gfx.drawRectangle(drawX, drawY, 38, 38, this.biome.theme.backgroundColor);
 
         let roomTypes = [];
 
@@ -410,8 +398,6 @@ class Map
 
     drawRoomShadow(room)
     {
-        if(this.debug) { return; }
-
         const w = 38;
         const h = 38;
         const drawX = room.x * w;
@@ -424,9 +410,47 @@ class Map
         this.gfx.drawRectangle(drawX + 1, drawY + 1, 36, 36, floorColor);
     }
 
-    draw()
+    drawEncounter(room, drawX, drawY)
     {
-        this.gfx.fillBackground(this.biome.theme.backgroundColor);
+        const encounter = this.getEncounter(room);
+
+        // yield if the encounter is not found
+        if(encounter === null) { return; }
+
+        const spriteX = encounter.spriteX;
+        const spriteY = encounter.spriteY;
+        const spriteOffsetX = (typeof encounter.spriteOffsetX !== "undefined" && encounter.spriteOffsetX != null)? encounter.spriteOffsetX: 0;
+        const spriteOffsetY = (typeof encounter.spriteOffsetY !== "undefined" && encounter.spriteOffsetY != null)? encounter.spriteOffsetY: 0;
+
+        this.gfx.drawSprite(this.texture, spriteX, spriteY, drawX + 3 + spriteOffsetX, drawY - 8 + spriteOffsetY);
+    }
+
+    drawFeature(room, drawX, drawY)
+    {
+        const feature = this.getFeature(room);
+
+        // yeild if the feature could not be found
+        if(feature == null) { return; }
+
+        const spriteX = feature.spriteX;
+        const spriteY = feature.spriteY;
+
+        this.gfx.drawSprite(this.texture, spriteX, spriteY, drawX + 1, drawY + 1, 36, 36);
+    }
+
+    drawHighlights()
+    {
+        const w = 38;
+        const h = 38;
+
+        const currentRoom = this.getCurrentRoom();
+
+        this.gfx.drawRectangleOutline((currentRoom.x * w), (currentRoom.y * h), 38, 38, "#fab40b", 2);
+    }
+
+    drawDebugHighlights()
+    {
+        if(!ENV.DEBUG) { return; }
 
         for(let gridY = 0; gridY < this.gridRows; gridY++)
         {    
@@ -434,9 +458,20 @@ class Map
             {
                 const room = this.getRoom(gridX, gridY);
 
-                if(room === null || room.type == 0 || (!this.debug && room.status == 0)) { continue; }
+                const w = 38;
+                const h = 38;
+                const drawX = room.x * w;
+                const drawY = room.y * h;
 
-                this.drawRoom(room);
+                if(ENV.DEBUG_FLAGS.indexOf("highlightEncounters") >= 0 && Encounter.containsEncounter(room))
+                {
+                    this.gfx.drawRectangleOutline(drawX, drawY, 38, 38, "red", 2);
+                }
+
+                if(ENV.DEBUG_FLAGS.indexOf("highlightFeatures") >= 0 && Feature.containsFeature(room))
+                {
+                    this.gfx.drawRectangleOutline(drawX, drawY, 38, 38, "blue", 2);
+                }
             }
         }
     }

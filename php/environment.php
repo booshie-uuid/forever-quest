@@ -2,6 +2,8 @@
 class Environment
 {
     public $release;
+    public $debug;
+    public $debugFlags;
 
     public function __construct($configURI)
     {
@@ -13,6 +15,8 @@ class Environment
         }
 
         $this->release = $config["release"];
+        $this->debug = $config["debug"];
+        $this->debugFlags = $config["debugFlags"];
     }
 }
 ?>

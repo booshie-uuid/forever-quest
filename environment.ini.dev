@@ -1,2 +1,4 @@
 [build]
 release = "latest"
+debug = "true"
+debugFlags = "highlightEncounters,highlightFeatures"

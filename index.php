@@ -27,9 +27,7 @@
     <link rel="stylesheet" type="text/css" href="<?= $ENV->release ?>/css/main.css"/>
 
     <script>
-        const ENV = {
-            release: "<?= $ENV->release ?>"
-        };
+        const ENV = { RELEASE: "<?= $ENV->release ?>", DEBUG: <?= $ENV->debug ?>, DEBUG_FLAGS: "<?= $ENV->debugFlags ?>" };
     </script>
 
     <script src="<?= $ENV->release ?>/js/number.js"></script>
@@ -57,7 +55,7 @@
 
 <script type="text/javascript">
 
-const engine = new Engine(ENV.release, "chatbox", "display");
+const engine = new Engine(ENV.RELEASE, "chatbox", "display");
 
 </script>
 
