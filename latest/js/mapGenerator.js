@@ -127,8 +127,6 @@ class MapGenerator
             }
         }
 
-        console.log(this.map.undefeatedLegendaryEnemies + this.map.undefeatedEpicEnemies + this.map.undefeatedRareEnemies);
-
         // explore the spawn room
         this.map.exploreRoom(spawnRoom.x, spawnRoom.y);
 
@@ -407,6 +405,14 @@ class MapGenerator
     handleDebug()
     {
         if(!ENV.DEBUG) { return; }
+
+        console.log(`Legendary Encounters: ${this.map.undefeatedLegendaryEnemies}/${this.map.maxLegendaryEnemies}`);
+        console.log(`Epic Encounters: ${this.map.undefeatedEpicEnemies}/${this.map.maxEpicEnemies}`);
+        console.log(`Rare Encounters: ${this.map.undefeatedRareEnemies}/${this.map.maxRareEnemies}`);
+
+        console.log(`Legendary Treasures: ${this.map.undiscoveredLegendaryTreasures}/${this.map.maxLegendaryTreasures}`);
+        console.log(`Epic Treasures: ${this.map.undiscoveredEpicTreasures}/${this.map.maxEpicTreasures}`);
+        console.log(`Rare Treasures: ${this.map.undiscoveredRareTreasures}/${this.map.maxRareTreasures}`);
 
         // explore all the rooms
         for(let y = 0; y < this.map.gridRows; y++)
