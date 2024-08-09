@@ -77,8 +77,8 @@ class Engine
 
         const currentRoom = this.map.getCurrentRoom();
 
-        const x = this.map.currentX + directionX;
-        const y = this.map.currentY + directionY;
+        const x = this.map.currentCol + directionX;
+        const y = this.map.currentRow + directionY;
 
         if(x < 0 || x >= 28 || y < 0 || y >= 18) return;
 
@@ -91,8 +91,8 @@ class Engine
 
         this.handleEvents(explorationEvents);
 
-        this.map.currentX = x;
-        this.map.currentY = y;
+        this.map.currentCol = x;
+        this.map.currentRow = y;
     }
 
     handleKeyRelease(event)

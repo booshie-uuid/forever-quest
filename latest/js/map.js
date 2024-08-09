@@ -25,8 +25,8 @@ class Map
         this.grid = null;
         this.generator = new MapGenerator(this, this.chance);
 
-        this.currentX = -1;
-        this.currentY = -1;
+        this.currentCol = -1;
+        this.currentRow = -1;
 
         this.undefeatedRareEnemies = 0;
         this.maxRareEnemies = this.chance.range(6, 8);
@@ -99,7 +99,7 @@ class Map
 
     getCurrentRoom()
     {
-        return this.getRoom(this.currentX, this.currentY);
+        return this.getRoom(this.currentCol, this.currentRow);
     }
 
     getRoom(x, y)
@@ -111,7 +111,7 @@ class Map
 
     updateRoom(room)
     {
-        this.grid[room.y][room.x] = room.compress();
+        this.grid[room.row][room.col] = room.compress();
     }
 
     getFeature(room)
@@ -280,11 +280,11 @@ class Map
     {
         this.gfx.fillBackground(this.biome.theme.backgroundColor);
 
-        for(let gridY = 0; gridY < this.gridRows; gridY++)
+        for(let row = 0; row < this.gridRows; row++)
         {    
-            for(let gridX = 0; gridX < this.gridCols; gridX++)
+            for(let col = 0; col < this.gridCols; col++)
             {
-                const room = this.getRoom(gridX, gridY);
+                const room = this.getRoom(col, row);
 
                 if(room === null || room.type == 0 || (!ENV.DEBUG && room.status == 0)) { continue; }
 
@@ -298,10 +298,10 @@ class Map
 
     drawRoom(room)
     {
-        const northNeighbor = this.getRoom(room.x, room.y - 1);
-        const eastNeighbor = this.getRoom(room.x + 1, room.y);
-        const southNeighbor = this.getRoom(room.x, room.y + 1);
-        const westNeighbor = this.getRoom(room.x - 1, room.y);
+        const northNeighbor = this.getRoom(room.col, room.row - 1);
+        const eastNeighbor = this.getRoom(room.col + 1, room.row);
+        const southNeighbor = this.getRoom(room.col, room.row + 1);
+        const westNeighbor = this.getRoom(room.col - 1, room.row);
         
         if(northNeighbor !== null && northNeighbor.type != 0 && northNeighbor.status == 0) { this.drawRoomShadow(northNeighbor); }
         if(eastNeighbor !== null && eastNeighbor.type != 0 && eastNeighbor.status == 0) { this.drawRoomShadow(eastNeighbor); }
@@ -379,11 +379,11 @@ class Map
     {
         if(!ENV.DEBUG) { return; }
 
-        for(let gridY = 0; gridY < this.gridRows; gridY++)
+        for(let row = 0; row < this.gridRows; row++)
         {    
-            for(let gridX = 0; gridX < this.gridCols; gridX++)
+            for(let col = 0; col < this.gridCols; col++)
             {
-                const room = this.getRoom(gridX, gridY);
+                const room = this.getRoom(col, row);
 
                 if(ENV.DEBUG_FLAGS.indexOf("highlightEncounters") >= 0 && Encounter.containsEncounter(room))
                 {

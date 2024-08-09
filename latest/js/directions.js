@@ -32,14 +32,14 @@ class DIRECTIONS
     {
         switch (direction)
         {
-            case DIRECTIONS.NORTH: return { x: 0, y: -1 };
-            case DIRECTIONS.EAST: return { x: 1, y: 0 };
-            case DIRECTIONS.SOUTH: return { x: 0, y: 1 };
-            case DIRECTIONS.WEST: return { x: -1, y: 0 };
-            case DIRECTIONS.NORTH_EAST: return { x: 1, y: -1 };
-            case DIRECTIONS.SOUTH_EAST: return { x: 1, y: 1 };
-            case DIRECTIONS.SOUTH_WEST: return { x: -1, y: 1 };
-            case DIRECTIONS.NORTH_WEST: return { x: -1, y: -1 };
+            case DIRECTIONS.NORTH: return { col: 0, row: -1 };
+            case DIRECTIONS.EAST: return { col: 1, row: 0 };
+            case DIRECTIONS.SOUTH: return { col: 0, row: 1 };
+            case DIRECTIONS.WEST: return { col: -1, row: 0 };
+            case DIRECTIONS.NORTH_EAST: return { col: 1, row: -1 };
+            case DIRECTIONS.SOUTH_EAST: return { col: 1, row: 1 };
+            case DIRECTIONS.SOUTH_WEST: return { col: -1, row: 1 };
+            case DIRECTIONS.NORTH_WEST: return { col: -1, row: -1 };
             default: return null;
         }
     }

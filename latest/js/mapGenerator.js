@@ -10,13 +10,13 @@ class MapGenerator
     {
         this.map.grid = this.map.grid || [];
 
-        for (let gridY = 0; gridY < this.map.gridRows; gridY++)
+        for (let rows = 0; rows < this.map.gridRows; rows++)
         {
-            this.map.grid[gridY] = this.map.grid[gridY] || [];
+            this.map.grid[rows] = this.map.grid[rows] || [];
 
-            for (let gridX = 0; gridX < this.map.gridCols; gridX++)
+            for (let col = 0; col < this.map.gridCols; col++)
             {
-                this.map.grid[gridY][gridX] = Room.generateEmptyRoom(this.map, gridX, gridY, 0).compress();
+                this.map.grid[rows][col] = Room.generateEmptyRoom(this.map, col, rows, 0).compress();
             }
         }
     }
@@ -51,8 +51,8 @@ class MapGenerator
         spawnRoom.type = Room.TYPES.SPAWN;
         this.map.updateRoom(spawnRoom);
 
-        this.map.currentX = spawnRoom.x;
-        this.map.currentY = spawnRoom.y;
+        this.map.currentCol = spawnRoom.col;
+        this.map.currentRow = spawnRoom.row;
 
         // remove the spawn room from the list of available deadends
         deadends = deadends.filter(room => room !== spawnRoom);
@@ -60,8 +60,8 @@ class MapGenerator
         // sort deadends by their distance from the spawn room
         // this will let us place rarer events further away from spawn
         deadends.sort((roomA, roomB) => {
-            const distanceA = Math.abs(roomA.x - spawnRoom.x) + Math.abs(roomA.y - spawnRoom.y);
-            const distanceB = Math.abs(roomB.x - spawnRoom.x) + Math.abs(roomB.y - spawnRoom.y);
+            const distanceA = Math.abs(roomA.col - spawnRoom.col) + Math.abs(roomA.row - spawnRoom.row);
+            const distanceB = Math.abs(roomB.col - spawnRoom.col) + Math.abs(roomB.row - spawnRoom.row);
             return distanceB - distanceA;       
         });
 
@@ -128,7 +128,7 @@ class MapGenerator
         }
 
         // explore the spawn room
-        this.map.exploreRoom(spawnRoom.x, spawnRoom.y);
+        this.map.exploreRoom(spawnRoom.col, spawnRoom.row);
 
         // handle any debug requirements
         this.handleDebug();
@@ -167,28 +167,28 @@ class MapGenerator
     {
         const path = [];
         
-        let currentX = start.x;
-        let currentY = start.y;
+        let currentCol = start.col;
+        let currentRow = start.row;
 
         // we will randomly pick a heading (horizontal or vertical) every few steps
         // to ensure the path we create is more interesting
         let isMovingHorizontally = this.chance.flip();
         let stepsSinceDirectionChange = 0;
 
-        while(currentX !== destination.x || currentY !== destination.y)
+        while(currentCol !== destination.col || currentRow !== destination.row)
         {
             // move towards the destination
-            currentX = (isMovingHorizontally)? Number.converge(currentX, destination.x): currentX;
-            currentY = (!isMovingHorizontally)? Number.converge(currentY, destination.y): currentY;
+            currentCol = (isMovingHorizontally)? Number.converge(currentCol, destination.col): currentCol;
+            currentRow = (!isMovingHorizontally)? Number.converge(currentRow, destination.row): currentRow;
 
             // force a switch in direction if we can no longer move closer in the current direction
-            isMovingHorizontally = (currentX === destination.x)? false: isMovingHorizontally;
-            isMovingHorizontally = (currentY === destination.y)? true: isMovingHorizontally;
+            isMovingHorizontally = (currentCol === destination.col)? false: isMovingHorizontally;
+            isMovingHorizontally = (currentRow === destination.row)? true: isMovingHorizontally;
     
-            path.push(this.map.getRoom(currentX, currentY));
+            path.push(this.map.getRoom(currentCol, currentRow));
 
             stepsSinceDirectionChange++;
-            const distance = (isMovingHorizontally)? Math.abs(destination.y - currentY): Math.abs(destination.x - currentX);
+            const distance = (isMovingHorizontally)? Math.abs(destination.row - currentRow): Math.abs(destination.col - currentCol);
             
             if(stepsSinceDirectionChange > 3 && distance > 3)
             {
@@ -258,27 +258,27 @@ class MapGenerator
         switch(direction)
         {
             case DIRECTIONS.NORTH:
-                neighbors.push(this.map.getRoom(room.x, room.y - 1));
-                neighbors.push(this.map.getRoom(room.x + 1, room.y - 1));
-                neighbors.push(this.map.getRoom(room.x - 1, room.y - 1));
+                neighbors.push(this.map.getRoom(room.col, room.row - 1));
+                neighbors.push(this.map.getRoom(room.col + 1, room.row - 1));
+                neighbors.push(this.map.getRoom(room.col - 1, room.row - 1));
                 break;
 
             case DIRECTIONS.EAST:
-                neighbors.push(this.map.getRoom(room.x + 1, room.y));
-                neighbors.push(this.map.getRoom(room.x + 1, room.y + 1));
-                neighbors.push(this.map.getRoom(room.x + 1, room.y - 1));
+                neighbors.push(this.map.getRoom(room.col + 1, room.row));
+                neighbors.push(this.map.getRoom(room.col + 1, room.row + 1));
+                neighbors.push(this.map.getRoom(room.col + 1, room.row - 1));
                 break;
 
             case DIRECTIONS.SOUTH:
-                neighbors.push(this.map.getRoom(room.x, room.y + 1));
-                neighbors.push(this.map.getRoom(room.x + 1, room.y + 1));
-                neighbors.push(this.map.getRoom(room.x - 1, room.y + 1));
+                neighbors.push(this.map.getRoom(room.col, room.row + 1));
+                neighbors.push(this.map.getRoom(room.col + 1, room.row + 1));
+                neighbors.push(this.map.getRoom(room.col - 1, room.row + 1));
                 break;
 
             case DIRECTIONS.WEST:
-                neighbors.push(this.map.getRoom(room.x - 1, room.y));
-                neighbors.push(this.map.getRoom(room.x - 1, room.y + 1));
-                neighbors.push(this.map.getRoom(room.x - 1, room.y - 1));
+                neighbors.push(this.map.getRoom(room.col - 1, room.row));
+                neighbors.push(this.map.getRoom(room.col - 1, room.row + 1));
+                neighbors.push(this.map.getRoom(room.col - 1, room.row - 1));
                 break;
         }
 
@@ -353,7 +353,7 @@ class MapGenerator
             let adjoiningRoomCount = 0;
             for (const delta of allDirectionDeltas)
             {
-                const neighbor = this.map.getRoom(room.x + delta.x, room.y + delta.y);
+                const neighbor = this.map.getRoom(room.col + delta.col, room.row + delta.row);
 
                 adjoiningRoomCount += (neighbor === null || neighbor.type !== Room.TYPES.EMPTY)? 1: 0;
             }
@@ -366,8 +366,8 @@ class MapGenerator
             // we only want to close loops where there is a single space seperating two corridors
             for (const delta of keyDirectionDeltas)
             {
-                const midRoom = this.map.getRoom(room.x + delta.x, room.y + delta.y);
-                const endRoom = this.map.getRoom(room.x + (2 * delta.x), room.y + (2 * delta.y));
+                const midRoom = this.map.getRoom(room.col + delta.col, room.row + delta.row);
+                const endRoom = this.map.getRoom(room.col + (2 * delta.col), room.row + (2 * delta.row));
 
                 if(midRoom !== null && midRoom.type == Room.TYPES.EMPTY && endRoom !== null && endRoom.type != Room.TYPES.EMPTY)
                 {
@@ -412,11 +412,11 @@ class MapGenerator
         console.log(`Rare Treasures: ${this.map.undiscoveredRareTreasures}/${this.map.maxRareTreasures}`);
 
         // explore all the rooms
-        for(let y = 0; y < this.map.gridRows; y++)
+        for(let row = 0; row < this.map.gridRows; row++)
         {
-            for(let x = 0; x < this.map.gridCols; x++)
+            for(let col = 0; col < this.map.gridCols; col++)
             {
-                this.map.exploreRoom(x, y);
+                this.map.exploreRoom(col, row);
             }
         }
     }

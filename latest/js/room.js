@@ -7,17 +7,17 @@ class Room
         SPAWN: 3
     }
 
-    static generateEmptyRoom(map, x, y, type)
+    static generateEmptyRoom(map, col, row, type)
     {
         const data = Array(10).fill(0);
         const status = 0; // 0 = unexplored
 
         data[0] = status;
-        data[1] = x;
-        data[2] = y;
+        data[1] = col;
+        data[2] = row;
         data[3] = type;
 
-        return new Room(map, [status, x, y, type, 0, 0, 0, 0, 0, 0]);
+        return new Room(map, [status, col, row, type, 0, 0, 0, 0, 0, 0]);
     }
 
     constructor(map, data)
@@ -25,8 +25,8 @@ class Room
         this.map = map;
 
         this.status = data[0];
-        this.x = data[1];
-        this.y = data[2];
+        this.col = data[1];
+        this.row = data[2];
         this.type = data[3];
         this.variant = data[4];
         this.encounterKey = data[5];
@@ -36,8 +36,8 @@ class Room
         this.hasSouthDoor = data[8] == 1;
         this.hasWestDoor = data[9] == 1;
 
-        this.drawX = (this.x * 38) + 12;
-        this.drawY = (this.y * 38) + 12;
+        this.drawX = (this.col * 38) + 12;
+        this.drawY = (this.row * 38) + 12;
     }
 
     compress()
@@ -59,8 +59,8 @@ class Room
 
         if(deltas === null) { return null; }
 
-        const row = this.x + deltas.x;
-        const col = this.y + deltas.y;
+        const row = this.col + deltas.col;
+        const col = this.row + deltas.row;
 
         return this.map.getRoom(row, col);
     }
