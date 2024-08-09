@@ -48,20 +48,6 @@ class Biome
         // yeild if the target is invalid
         if(target === null) { return []; }
 
-        // determine rarity of potential loot based on chance
-        const roll = chance.roll(1, 20);
-        let rarity = "common";
-
-        if(roll == 20) { rarity = "legendary"; }
-        else if(roll >= 16) { rarity = "epic"; }
-        else if(roll >= 10) { rarity = "rare"; }
-        else if(roll >= 6) { rarity = "uncommon"; }
-        else { rarity = "common"; }
-        
-        // retrieve potential loot
-        const potentialLootKeys = (Array.isArray(target.loot))? target.loot: [];
-        const potentialLoot = this.loot.filter(loot => potentialLootKeys.includes(loot.key) && loot.rarity == rarity);
-
         // retrieve gaurenteed loot
         const gaurenteedLootKeys = (Array.isArray(target.gaurenteedLoot))? target.gaurenteedLoot: [];
         const gaurenteedLoot = this.loot.filter(loot => gaurenteedLootKeys.includes(loot.key));
@@ -69,9 +55,36 @@ class Biome
         // award gaurenteed loot
         const loot = [...gaurenteedLoot];
 
-        // award one item from list of potential loot
-        const randomItem = chance.pick(potentialLoot);
-        if(randomItem !== null) { loot.push(randomItem); }
+        // award additional loot based on rolls
+        const maxAdditionalLoot = 1;
+        const additionalLootKeys = (Array.isArray(target.loot))? target.loot: [];
+        const additionalLoot = [];
+
+        // inline helper function to attempt to award an item of a given rarity
+        const awardItem = (rarity) => {
+            
+            const potentialLoot = this.loot.filter(item => additionalLootKeys.includes(item.key) && item.rarity == rarity);
+
+            if(potentialLoot.length > 0) { additionalLoot.push(chance.pick(potentialLoot)); }
+
+        };
+
+        let attempts = 0;
+        while(additionalLoot.length < maxAdditionalLoot && attempts < 20)
+        {
+            const roll = chance.roll(1, 20);
+
+            if(roll == 20) { awardItem("legendary"); }
+            else if(roll >= 16) { awardItem("epic"); }
+            else if(roll >= 10) { awardItem("rare"); }
+            else if(roll >= 6) { awardItem("uncommon"); }
+            else { awardItem("common"); }
+
+            attempts++;
+        }
+        
+        // award additional loot
+        loot.push(...additionalLoot);
         
         return loot;
     }

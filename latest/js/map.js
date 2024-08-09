@@ -264,22 +264,12 @@ class Map
         const events = [];
         const loot = [];
 
-        let encounter = this.getEncounter(room);
+        let encounter = Encounter.fromRoom(this.biome, room);
 
-        if(encounter !== null)
+        if(encounter !== null && !encounter.isFaulted)
         {
             const flavors = ["whooped", "walloped", "man-handled", "sucker-punched"];
-            let tag = "COMMON";
-
-            switch(room.type)
-            {
-                case 101: tag = "RARE"; break;
-                case 102: tag = "EPIC"; break;
-                case 103: tag = "LEGENDARY"; break;
-                default: break;
-            }
-
-            const message = `You have ${this.chance.pick(flavors)} a [${tag}][${encounter.name}][/${tag}]!`;
+            const message = `You have ${this.chance.pick(flavors)} the ${encounter.getChatName()}!`;
 
             events.push({type: "narrator-message", data: message});
 
@@ -287,7 +277,7 @@ class Map
             loot.push(...encounterLoot);
         }
 
-        const feature = this.getFeature(room);
+        const feature = Feature.fromRoom(this.biome, room);
 
         if(feature !== null && feature.isLootable)
         {
@@ -303,13 +293,14 @@ class Map
             switch(tag)
             {
                 case "COMMON": flavor = "Lame..."; break;
+                case "UNCOMMON": flavor = "Meh."; break;
                 case "RARE": flavor = "Nice! "; break;
                 case "EPIC": flavor = "Oh Snap..."; break;
                 case "LEGENDARY": flavor = "Holy Shit"; break;
                 default: flavor = "Huh?"; break;
             }
 
-            const message = `${flavor} You looted a [${tag}][${item.name}][/${tag}]!`;
+            const message = `${flavor} You looted [${tag}][${item.name}][/${tag}]!`;
 
             events.push({type: "narrator-message", data: message});
         }
