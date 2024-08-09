@@ -53,7 +53,16 @@ class Room
         return (this.type == 0);
     }
 
-    getNeighborByDirection(map, direction)
+    isConnected(direction)
+    {
+        const neighbor = this.getNeighborByDirection(direction);
+
+        if(neighbor === null) { return false; }
+
+        return neighbor.type != Room.TYPES.EMPTY;
+    }
+
+    getNeighborByDirection(direction)
     {
         const deltas = DIRECTIONS.getDirectionDeltas(direction);
 

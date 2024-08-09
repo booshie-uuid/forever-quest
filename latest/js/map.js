@@ -106,7 +106,7 @@ class Map
     {
         if(x < 0 || x >= this.gridCols || y < 0 || y >= this.gridRows) return null;
 
-        return new Room(this.map, this.grid[y][x]);
+        return new Room(this, this.grid[y][x]);
     }
 
     updateRoom(room)
@@ -203,24 +203,14 @@ class Map
         }
 
         const encounterKey = (encounterKeys.length > 0)? this.chance.pick(encounterKeys): 0;
-
-        const northNeighbor = this.getRoom(x, y - 1);
-        const eastNeighbor = this.getRoom(x + 1, y);
-        const southNeighbor = this.getRoom(x, y + 1);
-        const westNeighbor = this.getRoom(x - 1, y);
-
-        const hasNorthDoor = (northNeighbor !== null && northNeighbor.type != 0)? true: false;
-        const hasEastDoor = (eastNeighbor !== null && eastNeighbor.type != 0)? true: false;
-        const hasSouthDoor = (southNeighbor !== null && southNeighbor.type!= 0)? true: false;
-        const hasWestDoor = (westNeighbor !== null && westNeighbor.type != 0)? true: false;
-        
+       
         room.status = 1; // 1 = explored
         room.variant = variant;
         room.encounterKey = encounterKey;
-        room.hasNorthDoor = hasNorthDoor;
-        room.hasEastDoor = hasEastDoor;
-        room.hasSouthDoor = hasSouthDoor;
-        room.hasWestDoor = hasWestDoor;
+        room.hasNorthDoor = room.isConnected(DIRECTIONS.NORTH);
+        room.hasEastDoor = room.isConnected(DIRECTIONS.EAST);
+        room.hasSouthDoor = room.isConnected(DIRECTIONS.SOUTH);
+        room.hasWestDoor = room.isConnected(DIRECTIONS.WEST);
 
         this.updateRoom(room);
 
