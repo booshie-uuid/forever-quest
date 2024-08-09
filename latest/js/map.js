@@ -288,15 +288,13 @@ class Map
 
     drawRoom(room)
     {
-        const northNeighbor = this.getRoom(room.col, room.row - 1);
-        const eastNeighbor = this.getRoom(room.col + 1, room.row);
-        const southNeighbor = this.getRoom(room.col, room.row + 1);
-        const westNeighbor = this.getRoom(room.col - 1, room.row);
-        
-        if(northNeighbor !== null && northNeighbor.type != 0 && northNeighbor.status == 0) { this.drawRoomShadow(northNeighbor); }
-        if(eastNeighbor !== null && eastNeighbor.type != 0 && eastNeighbor.status == 0) { this.drawRoomShadow(eastNeighbor); }
-        if(southNeighbor !== null && southNeighbor.type != 0 && southNeighbor.status == 0) { this.drawRoomShadow(southNeighbor); }
-        if(westNeighbor !== null && westNeighbor.type != 0 && westNeighbor.status == 0) { this.drawRoomShadow(westNeighbor); }
+        // get neighbors in connectable directions (N, E, S, W)
+        const neighbors = room.getNeighborsByDirection(DIRECTIONS.getKeyDirections());
+
+        for(const neighbor of neighbors)
+        {
+            this.drawRoomShadow(neighbor);
+        }
 
         this.gfx.drawRectangle(room.drawX, room.drawY, 38, 38, this.biome.theme.backgroundColor);
 
@@ -324,6 +322,9 @@ class Map
 
     drawRoomShadow(room)
     {
+        // yield if the room is empty or has already been explored
+        if(room === null || room.type == Room.TYPES.EMPTY || room.status > 0) { return; }
+
         this.gfx.drawRectangle(room.drawX + 1, room.drawY + 1, 36, 36, this.biome.theme.roomShadowColor);
     }
 

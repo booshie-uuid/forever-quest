@@ -62,6 +62,20 @@ class Room
         return neighbor.type != Room.TYPES.EMPTY;
     }
 
+    getNeighborsByDirection(directions)
+    {
+        const neighbors = [];
+
+        for(const direction of directions)
+        {
+            const neighbor = this.getNeighborByDirection(direction);
+
+            if(neighbor !== null) { neighbors.push(neighbor); }
+        }
+
+        return neighbors;
+    }
+
     getNeighborByDirection(direction)
     {
         const deltas = DIRECTIONS.getDirectionDeltas(direction);
