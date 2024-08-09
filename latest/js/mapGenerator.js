@@ -395,9 +395,6 @@ class MapGenerator
     
     generateEncounter(room, type)
     {
-        if(room.type > 100)
-            console.log("overwrite detected");
-
         room.type = type;
         this.map.updateRoom(room);
     }
