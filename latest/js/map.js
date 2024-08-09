@@ -50,7 +50,7 @@ class Map
         this.gfx = gfx;
         this.chance = new SharedChance(seed);
 
-        this.gridRows = 16;
+        this.gridRows = 15;
         this.gridCols = 25;
 
         this.isReady = false;
@@ -82,14 +82,6 @@ class Map
 
         this.undiscoveredLegendaryTreasures = 0;
         this.maxLegendaryTreasures = 1;
-
-        this.remainingRareEnemies = this.chance.range(6, 8);
-        this.remainingEpicEnemies = this.chance.range(2, 3);
-        this.remainingLegendaryEnemies = 1; //this.chance.range(0, 1);
-
-        this.remainingRareTreasures = this.chance.range(4, 6);
-        this.remainingEpicTreasures = this.chance.range(1, 2);
-        this.remainingLegendaryTreasures = this.chance.range(0, 1);
 
         this.state = Map.STATES.LOADING_DATA;
 
@@ -152,11 +144,6 @@ class Map
         if(x < 0 || x >= this.gridCols || y < 0 || y >= this.gridRows) return null;
 
         return new Room(this.grid[y][x]);
-    }
-
-    hasInvalidNeighbors(neighbors)
-    {
-        return neighbors.some(neighbor => neighbor === null || neighbor.type !== 0);
     }
 
     updateRoom(room)
@@ -393,11 +380,7 @@ class Map
 
     drawRoomShadow(room)
     {
-        const floorColor = this.biome.theme.roomShadowColor;
-        const wallColor = this.biome.theme.backgroundColor;
-
-        //this.gfx.drawRectangle(room.drawX, room.drawY, 36, 36, wallColor);
-        this.gfx.drawRectangle(room.drawX + 1, room.drawY + 1, 36, 36, floorColor);
+        this.gfx.drawRectangle(room.drawX + 1, room.drawY + 1, 36, 36, this.biome.theme.roomShadowColor);
     }
 
     drawEncounter(room)

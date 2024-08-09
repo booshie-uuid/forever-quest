@@ -72,8 +72,6 @@ class MapGenerator
         exitRoom.type = Feature.TYPES.EXIT;
         this.map.updateRoom(exitRoom);
 
-        this.map.exploreRoom(exitRoom.x, exitRoom.y);
-
         while(deadends.length > 0)
         {
             // pick a random deadend but with bias towards ones that are further from spawn
