@@ -1,0 +1,67 @@
+body
+{
+	margin: 32px;
+	color: #ffffff;
+	background-color: #0a0a0a;
+
+	font-family: "Red Hat Display", sans-serif;
+	font-optical-sizing: auto;
+	font-style: normal;
+	font-size: 14pt;
+
+	background-image: url(../img/page-background.png);
+	background-repeat: repeat;
+}
+
+div.container
+{
+	width: min-content;
+	background-color: #141414;
+	margin: 0 auto;
+	padding: 16px;
+
+	background-image: url(../img/container-background.png);
+	background-repeat: repeat;
+}
+
+div.container ::-webkit-scrollbar
+{
+	width: 16px;
+}
+
+div.container ::-webkit-scrollbar-track
+{
+	background: #141414;
+}
+
+div.container ::-webkit-scrollbar-thumb 
+{
+	background-color: #474747;
+	border-radius: 20px;
+	border: 3px solid #141414;
+}
+
+div.container canvas
+{
+	width: 988px;
+	height: 680px;
+	background-color: #0a0a0a;
+	margin: 0 0 16px 0;
+	cursor: pointer;
+}
+
+div.chatbox
+{
+	width: 988px;
+	height: 200px;
+	background-color: #0a0a0a;
+	overflow-y: scroll;
+	padding: 16px 0 8px 0;
+}
+
+div.chatbox p
+{
+	margin: 0 0 8px 0;
+	padding: 0 16px 0 16px;
+}
+
