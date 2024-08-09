@@ -50,8 +50,8 @@ class Map
         this.gfx = gfx;
         this.chance = new SharedChance(seed);
 
-        this.gridRows = 18;
-        this.gridCols = 26;
+        this.gridRows = 16;
+        this.gridCols = 25;
 
         this.isReady = false;
         this.isDataReady = false;
@@ -357,11 +357,6 @@ class Map
 
     drawRoom(room)
     {
-        const roomWidth = 38;
-        const roomHeight = 38;
-        const drawX = room.x * roomWidth;
-        const drawY = room.y * roomHeight;
-
         const northNeighbor = this.getRoom(room.x, room.y - 1);
         const eastNeighbor = this.getRoom(room.x + 1, room.y);
         const southNeighbor = this.getRoom(room.x, room.y + 1);
@@ -372,7 +367,7 @@ class Map
         if(southNeighbor !== null && southNeighbor.type != 0 && southNeighbor.status == 0) { this.drawRoomShadow(southNeighbor); }
         if(westNeighbor !== null && westNeighbor.type != 0 && westNeighbor.status == 0) { this.drawRoomShadow(westNeighbor); }
 
-        this.gfx.drawRectangle(drawX, drawY, 38, 38, this.biome.theme.backgroundColor);
+        this.gfx.drawRectangle(room.drawX, room.drawY, 38, 38, this.biome.theme.backgroundColor);
 
         let roomTypes = [];
 
@@ -390,27 +385,22 @@ class Map
         // yeild if no data can be found about the room type
         if(roomData === null) { return; }
 
-        this.gfx.drawSprite(this.texture, roomData.spriteX, roomData.spriteY, drawX + 1, drawY + 1, 36, 36);
+        this.gfx.drawSprite(this.texture, roomData.spriteX, roomData.spriteY, room.drawX + 1, room.drawY + 1, 36, 36);
 
-        this.drawEncounter(room, drawX, drawY);
-        this.drawFeature(room, drawX, drawY);
+        this.drawEncounter(room, room.drawX, room.drawY);
+        this.drawFeature(room, room.drawX, room.drawY);
     }
 
     drawRoomShadow(room)
     {
-        const w = 38;
-        const h = 38;
-        const drawX = room.x * w;
-        const drawY = room.y * h;
-
         const floorColor = this.biome.theme.roomShadowColor;
         const wallColor = this.biome.theme.backgroundColor;
 
-        this.gfx.drawRectangle(drawX, drawY, 36, 36, wallColor);
-        this.gfx.drawRectangle(drawX + 1, drawY + 1, 36, 36, floorColor);
+        //this.gfx.drawRectangle(room.drawX, room.drawY, 36, 36, wallColor);
+        this.gfx.drawRectangle(room.drawX + 1, room.drawY + 1, 36, 36, floorColor);
     }
 
-    drawEncounter(room, drawX, drawY)
+    drawEncounter(room)
     {
         const encounter = this.getEncounter(room);
 
@@ -422,10 +412,10 @@ class Map
         const spriteOffsetX = (typeof encounter.spriteOffsetX !== "undefined" && encounter.spriteOffsetX != null)? encounter.spriteOffsetX: 0;
         const spriteOffsetY = (typeof encounter.spriteOffsetY !== "undefined" && encounter.spriteOffsetY != null)? encounter.spriteOffsetY: 0;
 
-        this.gfx.drawSprite(this.texture, spriteX, spriteY, drawX + 3 + spriteOffsetX, drawY - 8 + spriteOffsetY);
+        this.gfx.drawSprite(this.texture, spriteX, spriteY, room.drawX + 3 + spriteOffsetX, room.drawY - 8 + spriteOffsetY);
     }
 
-    drawFeature(room, drawX, drawY)
+    drawFeature(room)
     {
         const feature = this.getFeature(room);
 
@@ -435,7 +425,7 @@ class Map
         const spriteX = feature.spriteX;
         const spriteY = feature.spriteY;
 
-        this.gfx.drawSprite(this.texture, spriteX, spriteY, drawX + 1, drawY + 1, 36, 36);
+        this.gfx.drawSprite(this.texture, spriteX, spriteY, room.drawX + 1, room.drawY + 1, 36, 36);
     }
 
     drawHighlights()
@@ -445,7 +435,7 @@ class Map
 
         const currentRoom = this.getCurrentRoom();
 
-        this.gfx.drawRectangleOutline((currentRoom.x * w), (currentRoom.y * h), 38, 38, "#fab40b", 2);
+        this.gfx.drawRectangleOutline((currentRoom.drawX), (currentRoom.drawY), 38, 38, "#fab40b", 2);
     }
 
     drawDebugHighlights()
@@ -458,19 +448,14 @@ class Map
             {
                 const room = this.getRoom(gridX, gridY);
 
-                const w = 38;
-                const h = 38;
-                const drawX = room.x * w;
-                const drawY = room.y * h;
-
                 if(ENV.DEBUG_FLAGS.indexOf("highlightEncounters") >= 0 && Encounter.containsEncounter(room))
                 {
-                    this.gfx.drawRectangleOutline(drawX, drawY, 38, 38, "red", 2);
+                    this.gfx.drawRectangleOutline(room.drawX, room.drawY, 38, 38, "red", 2);
                 }
 
                 if(ENV.DEBUG_FLAGS.indexOf("highlightFeatures") >= 0 && Feature.containsFeature(room))
                 {
-                    this.gfx.drawRectangleOutline(drawX, drawY, 38, 38, "blue", 2);
+                    this.gfx.drawRectangleOutline(room.drawX, room.drawY, 38, 38, "blue", 2);
                 }
             }
         }

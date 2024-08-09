@@ -16,7 +16,7 @@ class Engine
         // error out if the chatbox is not ready
         if(!this.chat.isReady) return alert("Error initialising chatbox. Something is seriously wrong.");
                 
-        this.gfx = new GFX(displayID, 988, 680, this.error.bind(this));
+        this.gfx = new GFX(displayID, 974, 680, this.error.bind(this));
 
         // error out if the display is not ready
         if(this.gfx.isFaulted) return this.error("Could not initialise games display.");

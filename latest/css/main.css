@@ -43,7 +43,7 @@ div.container ::-webkit-scrollbar-thumb
 
 div.container canvas
 {
-    width: 988px;
+    width: 974px;
     height: 680px;
     background-color: #0a0a0a;
     margin: 0 0 16px 0;
@@ -52,7 +52,7 @@ div.container canvas
 
 div.chatbox
 {
-    width: 988px;
+    width: 974px;
     height: 200px;
     background-color: #0a0a0a;
     overflow-y: scroll;

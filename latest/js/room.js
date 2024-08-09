@@ -33,6 +33,9 @@ class Room
         this.hasEastDoor = data[7] == 1;
         this.hasSouthDoor = data[8] == 1;
         this.hasWestDoor = data[9] == 1;
+
+        this.drawX = (this.x * 38) + 12;
+        this.drawY = (this.y * 38) + 12;
     }
 
     compress()
