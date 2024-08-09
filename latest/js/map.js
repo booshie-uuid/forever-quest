@@ -10,24 +10,27 @@ class Map
 
     constructor(gfx, seed)
     {
+        // key dependencies
         this.gfx = gfx;
         this.chance = new SharedChance(seed);
+        this.biome = new Biome("elven-ruins-standard");
+        this.generator = new MapGenerator(this, this.chance);
+        this.texture = null;
+        this.events = [];
+
+        // map state and other important flags
+        this.state = Map.STATES.LOADING_DATA;
+
+        // map grid and grid properties
+        this.grid = null;
 
         this.gridRows = 15;
         this.gridCols = 25;
-
-        this.isReady = false;
-        this.isDataReady = false;
-        this.isTextureReady = false;
-        this.isGridReady = false;
-        this.isValid = false;
-
-        this.grid = null;
-        this.generator = new MapGenerator(this, this.chance);
-
+        
         this.currentCol = -1;
         this.currentRow = -1;
 
+        // encounter and feature properties
         this.undefeatedRareEnemies = 0;
         this.maxRareEnemies = this.chance.range(6, 8);
 
@@ -45,14 +48,6 @@ class Map
 
         this.undiscoveredLegendaryTreasures = 0;
         this.maxLegendaryTreasures = 1;
-
-        this.state = Map.STATES.LOADING_DATA;
-
-        this.biome = new Biome("elven-ruins-standard");
-
-        this.texture = null;
-
-        this.events = [];
     }
 
     update()
