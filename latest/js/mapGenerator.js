@@ -181,14 +181,12 @@ class MapGenerator
         // to ensure the path we create is more interesting
         let isMovingHorizontally = this.chance.flip();
         let stepsSinceDirectionChange = 0;
-        
-        const move = (current, target) => (current < target ? current + 1 : current > target ? current - 1 : current);
 
         while(currentX !== destination.x || currentY !== destination.y)
         {
             // move towards the destination
-            currentX = (isMovingHorizontally)? move(currentX, destination.x): currentX;
-            currentY = (!isMovingHorizontally)? move(currentY, destination.y): currentY;
+            currentX = (isMovingHorizontally)? Number.converge(currentX, destination.x): currentX;
+            currentY = (!isMovingHorizontally)? Number.converge(currentY, destination.y): currentY;
 
             // force a switch in direction if we can no longer move closer in the current direction
             isMovingHorizontally = (currentX === destination.x)? false: isMovingHorizontally;
