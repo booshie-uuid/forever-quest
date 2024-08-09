@@ -106,7 +106,7 @@ class Map
     {
         if(x < 0 || x >= this.gridCols || y < 0 || y >= this.gridRows) return null;
 
-        return new Room(this.grid[y][x]);
+        return new Room(this.map, this.grid[y][x]);
     }
 
     updateRoom(room)

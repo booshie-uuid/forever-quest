@@ -16,7 +16,7 @@ class MapGenerator
 
             for (let gridX = 0; gridX < this.map.gridCols; gridX++)
             {
-                this.map.grid[gridY][gridX] = Room.generateEmptyRoom(gridX, gridY, 0).compress();
+                this.map.grid[gridY][gridX] = Room.generateEmptyRoom(this.map, gridX, gridY, 0).compress();
             }
         }
     }
