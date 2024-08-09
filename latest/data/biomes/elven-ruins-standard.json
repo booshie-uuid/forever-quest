@@ -1,228 +1,228 @@
 {
-    "name": "Elven Ruins",
+	"name": "Elven Ruins",
 
-    "theme":
-    {
-        "spriteSheet": "elven-ruins-standard.png",
-        "backgroundColor": "#1a1412",
-        "roomShadowColor": "#5c4341"
-    },
+	"theme":
+	{
+		"spriteSheet": "elven-ruins-standard.png",
+		"backgroundColor": "#1a1412",
+		"roomShadowColor": "#5c4341"
+	},
 
-    "commonRooms": [
-        { "key": 1, "name": "Forest 1", "spriteX": 284, "spriteY": 2 },
-        { "key": 2, "name": "Forest 2", "spriteX": 322, "spriteY": 2 },
-        { "key": 3, "name": "Forest 3", "spriteX": 360, "spriteY": 2 },
-        { "key": 4, "name": "Forest 4", "spriteX": 398, "spriteY": 2 },
-        { "key": 5, "name": "Forest 5", "spriteX": 436, "spriteY": 2 },
-        { "key": 6, "name": "Forest 6", "spriteX": 474, "spriteY": 2 },
-        { "key": 7, "name": "Forest 7", "spriteX": 512, "spriteY": 2 },
-        { "key": 8, "name": "Forest 8", "spriteX": 550, "spriteY": 2 }
-    ],
+	"commonRooms": [
+		{ "key": 1, "name": "Forest 1", "spriteX": 284, "spriteY": 2 },
+		{ "key": 2, "name": "Forest 2", "spriteX": 322, "spriteY": 2 },
+		{ "key": 3, "name": "Forest 3", "spriteX": 360, "spriteY": 2 },
+		{ "key": 4, "name": "Forest 4", "spriteX": 398, "spriteY": 2 },
+		{ "key": 5, "name": "Forest 5", "spriteX": 436, "spriteY": 2 },
+		{ "key": 6, "name": "Forest 6", "spriteX": 474, "spriteY": 2 },
+		{ "key": 7, "name": "Forest 7", "spriteX": 512, "spriteY": 2 },
+		{ "key": 8, "name": "Forest 8", "spriteX": 550, "spriteY": 2 }
+	],
 
 
-    "rareRooms": [
-        { "key": 9, "name": "Ruin 1", "spriteX": 284, "spriteY": 40 },
-        { "key": 10, "name": "Ruin 2", "spriteX": 322, "spriteY": 40 },
-        { "key": 11, "name": "Ruin 3", "spriteX": 360, "spriteY": 40 },
-        { "key": 12, "name": "Ruin 3", "spriteX": 398, "spriteY": 40 }
-    ],
+	"rareRooms": [
+		{ "key": 9, "name": "Ruin 1", "spriteX": 284, "spriteY": 40 },
+		{ "key": 10, "name": "Ruin 2", "spriteX": 322, "spriteY": 40 },
+		{ "key": 11, "name": "Ruin 3", "spriteX": 360, "spriteY": 40 },
+		{ "key": 12, "name": "Ruin 3", "spriteX": 398, "spriteY": 40 }
+	],
 
-    "features": [
-        { "key": 200, "name": "Waystone", "isExit": true, "isLootable": false, "spriteX": 2, "spriteY": 148 },
-        { "key": 203, "name": "Rare Treasure", "isExit": false, "isLootable": true, "loot": [2], "spriteX": 40, "spriteY": 148 },
-        { "key": 204, "name": "Epic Treasure", "isExit": false, "isLootable": true, "loot": [2,6,7,8], "spriteX": 78, "spriteY": 148 },
-        { "key": 205, "name": "Legendary Treasure", "isExit": false, "isLootable": true, "loot": [2,6,7,8], "spriteX": 78, "spriteY": 148 }
-    ],
-    
-    "commonEncounters": [
-        {
-            "key": 1,
-            "name": "Forest Shroom",
-            "allegiance": "Forest Creatures",
-            "baseDisposition": "wary",
-            "baseLevel": 1,
-            "spriteX": 2,
-            "spriteY": 2,
-            "loot": [],
-            "gaurenteedLoot": []
-        },
-        {
-            "key": 2,
-            "name": "Angry Rat",
-            "allegiance": "forest creatures",
-            "baseDisposition": "hostile",
-            "baseLevel": 1,
-            "spriteX": 36,
-            "spriteY": 2,
-            "loot": [3,4],
-            "gaurenteedLoot": [3]
-        },
-        {
-            "key": 6,
-            "name": "Red Goblin Peon",
-            "allegiance": "Red Goblins",
-            "baseDisposition": "hostile",
-            "baseLevel": 1,
-            "spriteX": 172,
-            "spriteY": 2,
-            "loot": [3],
-            "gaurenteedLoot": []
-        },
-        {
-            "key": 7,
-            "name": "Forest Elf Novice",
-            "allegiance": "Forest Elves",
-            "baseDisposition": "hostile",
-            "baseLevel": 1,
-            "spriteX": 172,
-            "spriteY": 2,
-            "loot": [4,5],
-            "gaurenteedLoot": []
-        }
-    ],
-    
-    "rareEncounters": [
-        {
-            "key": 9,
-            "name": "Red Goblin Scout",
-            "allegiance": "Red Goblins",
-            "baseDisposition": "hostile",
-            "baseLevel": 2,
-            "spriteX": 2,
-            "spriteY": 36,
-            "loot": [3,4,6],
-            "gaurenteedLoot": []
-        },
-        {
-            "key": 10,
-            "name": "Red Goblin Brute",
-            "allegiance": "Red Goblins",
-            "baseDisposition": "hostile",
-            "baseLevel": 2,
-            "spriteX": 36,
-            "spriteY": 36,
-            "spriteOffsetX": -1,
-            "loot": [4,6],
-            "gaurenteedLoot": []
-        },
-        {
-            "key": 11,
-            "name": "Red Goblin Butcher",
-            "allegiance": "Red Goblins",
-            "baseDisposition": "hostile",
-            "baseLevel": 2,
-            "spriteX": 70,
-            "spriteY": 36,
-            "spriteOffsetX": 4,
-            "loot": [3,4,5,6,7],
-            "gaurenteedLoot": []
-        },
-        {
-            "key": 12,
-            "name": "Red Goblin Fighter",
-            "allegiance": "Red Goblins",
-            "baseDisposition": "hostile",
-            "baseLevel": 2,
-            "spriteX": 104,
-            "spriteY": 36,
-            "loot": [4,6],
-            "gaurenteedLoot": []
-        },
-        {
-            "key": 15,
-            "name": "Forest Elf Scout",
-            "allegiance": "Forest Elves",
-            "baseDisposition": "hostile",
-            "baseLevel": 2,
-            "spriteX": 206,
-            "spriteY": 36,
-            "loot": [4,5,6],
-            "gaurenteedLoot": []
-        },
-        {
-            "key": 16,
-            "name": "Forest Elf Archer",
-            "allegiance": "Forest Elves",
-            "baseDisposition": "hostile",
-            "baseLevel": 2,
-            "spriteX": 240,
-            "spriteY": 36,
-            "spriteOffsetX": 2, 
-            "loot": [2,4,5,6,7],
-            "gaurenteedLoot": []
-        }
-    ],
-    
-    "epicEncounters": [
-        {
-            "key": 17,
-            "name": "Red Goblin Brawler",
-            "allegiance": "Red Goblins",
-            "baseDisposition": "hostile",
-            "baseLevel": 2,
-            "spriteX": 2,
-            "spriteY": 70,
-            "spriteOffsetX": 1,
-            "loot": [4,5,6,7],
-            "gaurenteedLoot": []
-        },
-        {
-            "key": 18,
-            "name": "Red Goblin Gladiator",
-            "allegiance": "Red Goblins",
-            "baseDisposition": "hostile",
-            "baseLevel": 2,
-            "spriteX": 36,
-            "spriteY": 70,
-            "loot": [4,6,8],
-            "gaurenteedLoot": []
-        },
-        {
-            "key": 23,
-            "name": "Forest Elf Trickster",
-            "allegiance": "Forest Elves",
-            "baseDisposition": "hostile",
-            "baseLevel": 2,
-            "spriteX": 206,
-            "spriteY": 70,
-            "loot": [1,4,5,6,7],
-            "gaurenteedLoot": [1]
-        },
-        {
-            "key": 24,
-            "name": "Forest Elf Druid",
-            "allegiance": "Forest Elves",
-            "baseDisposition": "hostile",
-            "baseLevel": 2,
-            "spriteX": 240,
-            "spriteY": 70,
-            "loot": [2,4,5,7],
-            "gaurenteedLoot": []
-        }
-    ],
-    
-    "legendaryEncounters": [
-        {
-            "key": 25,
-            "name": "Minor Forest God",
-            "allegiance": "Forest Elves",
-            "baseDisposition": "hostile",
-            "baseLevel": 2,
-            "spriteX": 2,
-            "spriteY": 104,
-            "loot": [4,5,7,8],
-            "gaurenteedLoot": [2]
-        }
-    ],
+	"features": [
+		{ "key": 200, "name": "Waystone", "isExit": true, "isLootable": false, "spriteX": 2, "spriteY": 148 },
+		{ "key": 203, "name": "Rare Treasure", "isExit": false, "isLootable": true, "loot": [2], "spriteX": 40, "spriteY": 148 },
+		{ "key": 204, "name": "Epic Treasure", "isExit": false, "isLootable": true, "loot": [2,6,7,8], "spriteX": 78, "spriteY": 148 },
+		{ "key": 205, "name": "Legendary Treasure", "isExit": false, "isLootable": true, "loot": [2,6,7,8], "spriteX": 78, "spriteY": 148 }
+	],
+	
+	"commonEncounters": [
+		{
+			"key": 1,
+			"name": "Forest Shroom",
+			"allegiance": "Forest Creatures",
+			"baseDisposition": "wary",
+			"baseLevel": 1,
+			"spriteX": 2,
+			"spriteY": 2,
+			"loot": [],
+			"gaurenteedLoot": []
+		},
+		{
+			"key": 2,
+			"name": "Angry Rat",
+			"allegiance": "forest creatures",
+			"baseDisposition": "hostile",
+			"baseLevel": 1,
+			"spriteX": 36,
+			"spriteY": 2,
+			"loot": [3,4],
+			"gaurenteedLoot": [3]
+		},
+		{
+			"key": 6,
+			"name": "Red Goblin Peon",
+			"allegiance": "Red Goblins",
+			"baseDisposition": "hostile",
+			"baseLevel": 1,
+			"spriteX": 172,
+			"spriteY": 2,
+			"loot": [3],
+			"gaurenteedLoot": []
+		},
+		{
+			"key": 7,
+			"name": "Forest Elf Novice",
+			"allegiance": "Forest Elves",
+			"baseDisposition": "hostile",
+			"baseLevel": 1,
+			"spriteX": 172,
+			"spriteY": 2,
+			"loot": [4,5],
+			"gaurenteedLoot": []
+		}
+	],
+	
+	"rareEncounters": [
+		{
+			"key": 9,
+			"name": "Red Goblin Scout",
+			"allegiance": "Red Goblins",
+			"baseDisposition": "hostile",
+			"baseLevel": 2,
+			"spriteX": 2,
+			"spriteY": 36,
+			"loot": [3,4,6],
+			"gaurenteedLoot": []
+		},
+		{
+			"key": 10,
+			"name": "Red Goblin Brute",
+			"allegiance": "Red Goblins",
+			"baseDisposition": "hostile",
+			"baseLevel": 2,
+			"spriteX": 36,
+			"spriteY": 36,
+			"spriteOffsetX": -1,
+			"loot": [4,6],
+			"gaurenteedLoot": []
+		},
+		{
+			"key": 11,
+			"name": "Red Goblin Butcher",
+			"allegiance": "Red Goblins",
+			"baseDisposition": "hostile",
+			"baseLevel": 2,
+			"spriteX": 70,
+			"spriteY": 36,
+			"spriteOffsetX": 4,
+			"loot": [3,4,5,6,7],
+			"gaurenteedLoot": []
+		},
+		{
+			"key": 12,
+			"name": "Red Goblin Fighter",
+			"allegiance": "Red Goblins",
+			"baseDisposition": "hostile",
+			"baseLevel": 2,
+			"spriteX": 104,
+			"spriteY": 36,
+			"loot": [4,6],
+			"gaurenteedLoot": []
+		},
+		{
+			"key": 15,
+			"name": "Forest Elf Scout",
+			"allegiance": "Forest Elves",
+			"baseDisposition": "hostile",
+			"baseLevel": 2,
+			"spriteX": 206,
+			"spriteY": 36,
+			"loot": [4,5,6],
+			"gaurenteedLoot": []
+		},
+		{
+			"key": 16,
+			"name": "Forest Elf Archer",
+			"allegiance": "Forest Elves",
+			"baseDisposition": "hostile",
+			"baseLevel": 2,
+			"spriteX": 240,
+			"spriteY": 36,
+			"spriteOffsetX": 2, 
+			"loot": [2,4,5,6,7],
+			"gaurenteedLoot": []
+		}
+	],
+	
+	"epicEncounters": [
+		{
+			"key": 17,
+			"name": "Red Goblin Brawler",
+			"allegiance": "Red Goblins",
+			"baseDisposition": "hostile",
+			"baseLevel": 2,
+			"spriteX": 2,
+			"spriteY": 70,
+			"spriteOffsetX": 1,
+			"loot": [4,5,6,7],
+			"gaurenteedLoot": []
+		},
+		{
+			"key": 18,
+			"name": "Red Goblin Gladiator",
+			"allegiance": "Red Goblins",
+			"baseDisposition": "hostile",
+			"baseLevel": 2,
+			"spriteX": 36,
+			"spriteY": 70,
+			"loot": [4,6,8],
+			"gaurenteedLoot": []
+		},
+		{
+			"key": 23,
+			"name": "Forest Elf Trickster",
+			"allegiance": "Forest Elves",
+			"baseDisposition": "hostile",
+			"baseLevel": 2,
+			"spriteX": 206,
+			"spriteY": 70,
+			"loot": [1,4,5,6,7],
+			"gaurenteedLoot": [1]
+		},
+		{
+			"key": 24,
+			"name": "Forest Elf Druid",
+			"allegiance": "Forest Elves",
+			"baseDisposition": "hostile",
+			"baseLevel": 2,
+			"spriteX": 240,
+			"spriteY": 70,
+			"loot": [2,4,5,7],
+			"gaurenteedLoot": []
+		}
+	],
+	
+	"legendaryEncounters": [
+		{
+			"key": 25,
+			"name": "Minor Forest God",
+			"allegiance": "Forest Elves",
+			"baseDisposition": "hostile",
+			"baseLevel": 2,
+			"spriteX": 2,
+			"spriteY": 104,
+			"loot": [4,5,7,8],
+			"gaurenteedLoot": [2]
+		}
+	],
 
-    "loot": [
-        { "key": 1, "name": "Tricksters Coin", "rarity": "epic" },
-        { "key": 2, "name": "Enchanted Forest Wood", "rarity": "epic" },
-        { "key": 3, "name": "Rat Fur", "rarity": "common" },
-        { "key": 4, "name": "Literal Trash", "rarity": "common" },
-        { "key": 5, "name": "Elf Balls", "rarity": "uncommon" },
-        { "key": 6, "name": "Rod of Ohio", "rarity": "common" },
-        { "key": 7, "name": "Potion of Skibidi Rizz", "rarity": "epic" },
-        { "key": 8, "name": "The Sigma Blade", "rarity": "legendary" }
-    ]
+	"loot": [
+		{ "key": 1, "name": "Tricksters Coin", "rarity": "epic" },
+		{ "key": 2, "name": "Enchanted Forest Wood", "rarity": "epic" },
+		{ "key": 3, "name": "Rat Fur", "rarity": "common" },
+		{ "key": 4, "name": "Literal Trash", "rarity": "common" },
+		{ "key": 5, "name": "Elf Balls", "rarity": "uncommon" },
+		{ "key": 6, "name": "Rod of Ohio", "rarity": "common" },
+		{ "key": 7, "name": "Potion of Skibidi Rizz", "rarity": "epic" },
+		{ "key": 8, "name": "The Sigma Blade", "rarity": "legendary" }
+	]
 }

@@ -1,13 +1,13 @@
 class Room
 {
-    static TYPES = {
-        EMPTY: 0,
-        REGULAR: 1,
-        DEADEND: 2,
-        SPAWN: 3
-    }
+	static TYPES = {
+		EMPTY: 0,
+		REGULAR: 1,
+		DEADEND: 2,
+		SPAWN: 3
+	}
 
-    static generateEmptyRoom(x, y, type)
+	static generateEmptyRoom(x, y, type)
 	{
 		const data = Array(10).fill(0);
 		const status = 0; // 0 = unexplored
@@ -40,7 +40,7 @@ class Room
 		return Object.values(this);
 	}
 
-    isEmpty(x, y)
+	isEmpty(x, y)
 	{
 		return (this.type == 0);
 	}

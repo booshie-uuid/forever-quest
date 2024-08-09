@@ -10,21 +10,21 @@ class DIRECTIONS
 	static SOUTH_WEST = "south-west";
 	static NORTH_WEST = "north-west";
 
-    static getDirectionDeltas(direction)
+	static getDirectionDeltas(direction)
 	{
-        switch (direction)
+		switch (direction)
 		{
-            case DIRECTIONS.NORTH: return { x: 0, y: -1 };
-            case DIRECTIONS.EAST: return { x: 1, y: 0 };
-            case DIRECTIONS.SOUTH: return { x: 0, y: 1 };
-            case DIRECTIONS.WEST: return { x: -1, y: 0 };
+			case DIRECTIONS.NORTH: return { x: 0, y: -1 };
+			case DIRECTIONS.EAST: return { x: 1, y: 0 };
+			case DIRECTIONS.SOUTH: return { x: 0, y: 1 };
+			case DIRECTIONS.WEST: return { x: -1, y: 0 };
 			case DIRECTIONS.NORTH_EAST: return { x: 1, y: -1 };
 			case DIRECTIONS.SOUTH_EAST: return { x: 1, y: 1 };
 			case DIRECTIONS.SOUTH_WEST: return { x: -1, y: 1 };
 			case DIRECTIONS.NORTH_WEST: return { x: -1, y: -1 };
-            default: return { x: 0, y: 0 };
-        }
-    }
+			default: return { x: 0, y: 0 };
+		}
+	}
 
 	static getRandomDirection(chance)
 	{
@@ -158,8 +158,8 @@ class Map
 
 	hasInvalidNeighbors(neighbors)
 	{
-        return neighbors.some(neighbor => neighbor === null || neighbor.type !== 0);
-    }
+		return neighbors.some(neighbor => neighbor === null || neighbor.type !== 0);
+	}
 
 	updateRoom(room)
 	{
