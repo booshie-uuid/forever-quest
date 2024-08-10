@@ -68,7 +68,10 @@ class MapGenerator
         // using shift() so that the exit room is removed from the list of available deadends
         const exitRoom = deadends.shift();
 
-        exitRoom.type = Room.TYPES.EXIT;
+        exitRoom.type = Room.TYPES.DISCOVERABLE;
+        exitRoom.rarity = Room.RARITY.SPECIAL;
+        exitRoom.childKey = "exit";
+
         this.map.updateRoom(exitRoom);
 
         while(deadends.length > 0)
@@ -213,7 +216,7 @@ class MapGenerator
 
         while(actualCorridors < targetCorridors && attempts < 1000)
         {
-            const startRoom = rooms[SharedChance.roll(1, rooms.length) - 1];
+            const startRoom = SharedChance.pick(rooms);
             const direction = DIRECTIONS.getRandomDirection(SharedChance);
             const maxLength = SharedChance.range(6, 16);
 
@@ -324,23 +327,8 @@ class MapGenerator
         let loops = count;
         let loopAttempts = 0;
 
-        const allDirectionDeltas = [
-            DIRECTIONS.getDirectionDeltas(DIRECTIONS.NORTH),
-            DIRECTIONS.getDirectionDeltas(DIRECTIONS.EAST),
-            DIRECTIONS.getDirectionDeltas(DIRECTIONS.SOUTH),
-            DIRECTIONS.getDirectionDeltas(DIRECTIONS.WEST),
-            DIRECTIONS.getDirectionDeltas(DIRECTIONS.NORTH_EAST),
-            DIRECTIONS.getDirectionDeltas(DIRECTIONS.SOUTH_EAST),
-            DIRECTIONS.getDirectionDeltas(DIRECTIONS.SOUTH_WEST),
-            DIRECTIONS.getDirectionDeltas(DIRECTIONS.NORTH_WEST)
-        ];
-
-        const keyDirectionDeltas = [
-            DIRECTIONS.getDirectionDeltas(DIRECTIONS.NORTH),
-            DIRECTIONS.getDirectionDeltas(DIRECTIONS.EAST),
-            DIRECTIONS.getDirectionDeltas(DIRECTIONS.SOUTH),
-            DIRECTIONS.getDirectionDeltas(DIRECTIONS.WEST)
-        ];
+        const allDirectionDeltas = DIRECTIONS.getDirectionsDeltas(DIRECTIONS.getAllDirections());
+        const keyDirectionDeltas = DIRECTIONS.getDirectionsDeltas(DIRECTIONS.getKeyDirections());
  
         for(const room of deadends)
         {

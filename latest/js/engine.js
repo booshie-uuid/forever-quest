@@ -35,10 +35,14 @@ class Engine
         // key data controllers
         this.map = new Map(this.gfx);
 
+        this.path = null;
+
         // key entities
         this.activeEncounter = null;
 
-        this.playerDirectionX = "none";
+        this.movementKeyDown = false;
+
+        this.playerDirection = "none";
         this.playerDirectionX = 0;
         this.playerDirectionY = 0;
         this.playerLastMoved = Date.now();
@@ -77,7 +81,14 @@ class Engine
             {
                 this.movePlayer();
                 this.playerLastMoved = now;
+            } 
+            else if(now - this.playerLastMoved > 180)
+            {
+                this.movePlayerOnPath();
+                this.playerLastMoved = now;
             }
+
+            this.drawPath();
         }
 
         this.chat.update();
@@ -93,7 +104,7 @@ class Engine
         const welcomes = [];
 
         welcomes.push("Welcome to Forever Quest...");
-        welcomes.push("Click on the map and use WASD to move around.");
+        welcomes.push("Click on rooms or use WASD to move around.");
 
         for(const welcome of welcomes)
         {
@@ -162,6 +173,18 @@ class Engine
         discoverable.triggerRevealNarration();
     }
 
+    movePlayerOnPath()
+    {
+        if(this.path === null || this.path.length == 0) return;
+
+        const room = this.path.pop().room;
+
+        this.map.currentCol = room.col;
+        this.map.currentRow = room.row;
+
+        this.map.exploreRoom(room.col, room.row);
+    }
+
     movePlayer()
     {
         let directionX = 0;
@@ -214,18 +237,22 @@ class Engine
         switch (key)
         {
             case "w":
+            case "arrowup":
                 this.playerDirection = (this.playerDirection == "up") ? "none" : this.playerDirection;
                 break;
 
             case "a":
+            case "arrowleft":
                 this.playerDirection = (this.playerDirection == "left") ? "none" : this.playerDirection;
                 break;
 
             case "s":
+            case "arrowdown":
                 this.playerDirection = (this.playerDirection == "down") ? "none" : this.playerDirection;
                 break;
 
             case "d":
+            case "arrowright":
                 this.playerDirection = (this.playerDirection == "right") ? "none" : this.playerDirection;
                 break;
 
@@ -233,9 +260,11 @@ class Engine
                 break;
         }
 
-        if (["w", "a", "s", "d"].includes(key))
+        if (["w", "a", "s", "d", "arrowup", "arrowleft", "arrowdown", "arrowright"].includes(key))
         {
-            event.preventDefault();        
+            this.movementKeyDown = false;
+
+            event.preventDefault();
         }
     }
 
@@ -243,30 +272,39 @@ class Engine
     {
         const key = event.key.toLowerCase();
 
-        switch (key)
+        switch (key.toLowerCase())
         {
             case "w":
-                this.playerDirection = "up";
-                break;
+            case "arrowup":
+            this.playerDirection = "up";
+            break;
 
             case "a":
-                this.playerDirection = "left";
-                break;
+            case "arrowleft":
+            this.playerDirection = "left";
+            break;
 
             case "s":
-                this.playerDirection = "down";
-                break;
+            case "arrowdown":
+            this.playerDirection = "down";
+            break;
 
             case "d":
-                this.playerDirection = "right";
-                break;
+            case "arrowright":
+            this.playerDirection = "right";
+            break;
 
             default:
-                break;
+            break;
         }
 
-        if (["w", "a", "s", "d"].includes(key))
+        if (["w", "a", "s", "d", "arrowup", "arrowleft", "arrowdown", "arrowright"].includes(key))
         {
+            // ensure speedy response if new key press
+            if(!this.movementKeyDown) { this.playerLastMoved = Date.now() - 185; }
+
+            this.movementKeyDown = true;
+            this.path = null;
             event.preventDefault();            
         }
     }
@@ -280,7 +318,52 @@ class Engine
             //
         }
 
+        if(this.map.renderer !== null && (this.mouseDown && !this.mouse.isDown))
+        {
+            const room = this.map.renderer.getRoomFromScreen(this.mouse.x, this.mouse.y);
+
+            if(room !== null)
+            {
+                this.setDestination(room);
+            }
+        }
+
         this.mouseDown = this.mouse.isDown;
+    }
+
+    setDestination(room)
+    {
+        // yield if the room is empty or unexplored
+        if(room.type = Room.TYPES.EMPTY || room.status == 0) { return; }
+
+        const startingRoom = this.map.getCurrentRoom();
+        const finishingRoom = room;
+
+        this.path = this.map.pathFinder.calculatePath(startingRoom, finishingRoom);
+        this.path.pop();
+    }
+
+    drawPath()
+    {
+        if(this.path !== null)
+        {
+            this.gfx.context.strokeStyle = "#FF0000";
+            this.gfx.context.lineWidth = 2;
+
+            this.gfx.context.beginPath();
+
+            for(let i = 0; i < this.path.length; i++)
+            {
+                const room = this.path[i].room;
+
+                const drawX = room.drawX + this.map.renderer.drawOffsetX;
+                const drawY = room.drawY + this.map.renderer.drawOffsetY;
+
+                this.gfx.drawRectangleOutline(drawX, drawY, this.map.renderer.outerDrawSize, this.map.renderer.outerDrawSize, "#fab40b", 2, [4, 5]);
+            }
+
+            this.gfx.context.stroke();
+        }
     }
 
     error(message)

@@ -13,9 +13,10 @@ class Map
         // key dependencies
         this.gfx = gfx;
         this.biome = new Biome("elven-ruins-standard");
-        this.generator = new MapGenerator(this, SharedChance);
+        this.generator = new MapGenerator(this);
+        this.renderer =  null; // initialised after data and texture load
         this.texture = null;
-        this.events = [];
+        this.pathFinder = new PathFinder(this);
 
         // map state and other important flags
         this.state = Map.STATES.LOADING_DATA;
@@ -54,7 +55,7 @@ class Map
         if(this.state == Map.STATES.MAP_READY)
         {
             // draw the map
-            this.draw();
+            this.renderer.draw();
         }
         else if(this.state == Map.STATES.LOADING_DATA)
         {
@@ -79,6 +80,9 @@ class Map
             if(areTexturesReady)
             {
                 this.state = Map.STATES.GENERATING_MAP;
+
+                // initialise map generator
+                this.renderer = new MapRenderer(this);
             }
         }
         else if(this.state == Map.STATES.GENERATING_MAP)
@@ -110,7 +114,7 @@ class Map
         const room = this.getRoom(x, y);
 
         // yield if empty or already explored
-        if(room.type == Room.TYPES.EMPTY || room.status > 0) { return; }
+        if(room.type == Room.TYPES.EMPTY || room.status == 2) { return; }
 
         let types = [];
 
@@ -134,16 +138,19 @@ class Map
             variant = (types.length > 1)? SharedChance.range(0, 1): 0;
         }
 
-        let childKey = null;
+        let childKey = room.childKey;
 
-        switch(room.type)
+        if(childKey === null)
         {
-            case Room.TYPES.ENCOUNTER: childKey = Encounter.getRandomKey(this.biome, room); break;
-            case Room.TYPES.DISCOVERABLE: childKey = Discoverable.getRandomKey(this.biome, room); break;
-            default: null; break;
+            switch(room.type)
+            {
+                case Room.TYPES.ENCOUNTER: childKey = Encounter.getRandomKey(this.biome, room); break;
+                case Room.TYPES.DISCOVERABLE: childKey = Discoverable.getRandomKey(this.biome, room); break;
+                default: null; break;
+            }
         }
        
-        room.status = 1; // 1 = explored
+        room.status = 2; // 2 = explored
         room.variant = variant;
         room.childKey = childKey;
 
@@ -153,6 +160,14 @@ class Map
         room.hasWestDoor = room.isConnected(DIRECTIONS.WEST);
 
         this.updateRoom(room);
+
+        let neighbors = room.getNeighborsByDirection(DIRECTIONS.getKeyDirections());
+
+        for(const neighbor of neighbors)
+        {
+            neighbor.status = (neighbor.status === 0)? 1: neighbor.status; // 1 = revealed
+            this.updateRoom(neighbor);
+        }
 
         let encounter = Encounter.fromRoom(this.biome, room);
 
@@ -174,138 +189,6 @@ class Map
 
             // add event to the global event queue
             GEQ.enqueue(event);
-        }
-    }
-
-    draw()
-    {
-        this.gfx.fillBackground(this.biome.theme.backgroundColor);
-
-        for(let row = 0; row < this.gridRows; row++)
-        {    
-            for(let col = 0; col < this.gridCols; col++)
-            {
-                const room = this.getRoom(col, row);
-
-                if(room === null || room.type == 0 || (!ENV.DEBUG && room.status == 0)) { continue; }
-
-                this.drawRoom(room);
-            }
-        }
-
-        this.drawHighlights();
-        this.drawDebugHighlights();
-    }
-
-    drawRoom(room)
-    {
-        // yield if empty or unexplored
-        if(room.type == Room.TYPES.EMPTY || room.status == 0) { return; }
-
-        // get neighbors in connectable directions (N, E, S, W)
-        const neighbors = room.getNeighborsByDirection(DIRECTIONS.getKeyDirections());
-
-        for(const neighbor of neighbors)
-        {
-            this.drawRoomShadow(neighbor);
-        }
-
-        this.gfx.drawRectangle(room.drawX, room.drawY, 38, 38, this.biome.theme.backgroundColor);
-
-        let types = [];
-
-        if(room.type == Room.TYPES.REGULAR)
-        {    
-            types = this.biome.commonRooms;
-        }
-        else
-        {
-            types = this.biome.rareRooms;
-        }
-
-        const roomData = types[room.variant];
-
-        // yeild if no data can be found about the room type
-        if(roomData === null) { return; }
-
-        this.gfx.drawSprite(this.texture, roomData.spriteX, roomData.spriteY, room.drawX + 1, room.drawY + 1, 36, 36);
-
-        this.drawEncounter(room, room.drawX, room.drawY);
-        this.drawDiscoverable(room, room.drawX, room.drawY);
-    }
-
-    drawRoomShadow(room)
-    {
-        // yield if the room is empty or has already been explored
-        if(room === null || room.type == Room.TYPES.EMPTY || room.status > 0) { return; }
-
-        this.gfx.drawRectangle(room.drawX + 1, room.drawY + 1, 36, 36, this.biome.theme.roomShadowColor);
-    }
-
-    drawEncounter(room)
-    {
-        // yeild if the room does not contain an encounter
-        if(!Encounter.containsEncounter(room)) { return; }
-
-        const encounter = Encounter.fromRoom(this.biome, room);
-
-        // yield if a valid encounter can not be found
-        if(encounter === null) { return; }
-
-        const spriteX = encounter.spriteX;
-        const spriteY = encounter.spriteY;
-        const spriteOffsetX = (typeof encounter.spriteOffsetX !== "undefined" && encounter.spriteOffsetX != null)? encounter.spriteOffsetX: 0;
-        const spriteOffsetY = (typeof encounter.spriteOffsetY !== "undefined" && encounter.spriteOffsetY != null)? encounter.spriteOffsetY: 0;
-
-        this.gfx.drawSprite(this.texture, spriteX, spriteY, room.drawX + 3 + spriteOffsetX, room.drawY - 8 + spriteOffsetY);
-    }
-
-    drawDiscoverable(room)
-    {
-        // yeild if the room does not contain an encounter
-        if(!Discoverable.containsDiscoverable(room)) { return; }
-        
-        const discoverable = Discoverable.fromRoom(this.biome, room);
-
-        // yeild if the discoverable could not be found
-        if(discoverable == null) { return; }
-
-        const spriteX = discoverable.spriteX;
-        const spriteY = discoverable.spriteY;
-
-        this.gfx.drawSprite(this.texture, spriteX, spriteY, room.drawX + 1, room.drawY + 1, 36, 36);
-    }
-
-    drawHighlights()
-    {
-        const w = 38;
-        const h = 38;
-
-        const currentRoom = this.getCurrentRoom();
-
-        this.gfx.drawRectangleOutline((currentRoom.drawX), (currentRoom.drawY), 38, 38, "#fab40b", 2);
-    }
-
-    drawDebugHighlights()
-    {
-        if(!ENV.DEBUG) { return; }
-
-        for(let row = 0; row < this.gridRows; row++)
-        {    
-            for(let col = 0; col < this.gridCols; col++)
-            {
-                const room = this.getRoom(col, row);
-
-                if(ENV.DEBUG_FLAGS.indexOf("highlightEncounters") >= 0 && Encounter.containsEncounter(room))
-                {
-                    this.gfx.drawRectangleOutline(room.drawX, room.drawY, 38, 38, "red", 2);
-                }
-
-                if(ENV.DEBUG_FLAGS.indexOf("highlightDiscoverables") >= 0 && Discoverable.containsDiscoverable(room))
-                {
-                    this.gfx.drawRectangleOutline(room.drawX, room.drawY, 38, 38, "blue", 2);
-                }
-            }
         }
     }
 }

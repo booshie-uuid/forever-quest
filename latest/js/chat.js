@@ -53,7 +53,8 @@ class Chat
             "uncommon": "#1eff00",
             "rare": "#0070dd",
             "epic": "#a335ee",
-            "legendary": "#ff8000"
+            "legendary": "#ff8000",
+            "special": "#f5cd30"
         };
 
         return colorMappings[messageType] || colorMappings["public"];
@@ -70,6 +71,7 @@ class Chat
         content = content.replace("[RARE]", `</span><span style="color:${this.getMessageColor("rare")}">`).replace("[/RARE]", "</span><span>");
         content = content.replace("[EPIC]", `</span><span style="color:${this.getMessageColor("epic")}">`).replace("[/EPIC]", "</span><span>");
         content = content.replace("[LEGENDARY]", `</span><span style="color:${this.getMessageColor("legendary")}">`).replace("[/LEGENDARY]", "</span><span>");
+        content = content.replace("[SPECIAL]", `</span><span style="color:${this.getMessageColor("special")}">`).replace("[/SPECIAL]", "</span><span>");
 
         const line = document.createElement("p");
 

@@ -57,6 +57,7 @@ class Discoverable extends Lootable
             case Room.RARITY.RARE: tag = "RARE"; break;
             case Room.RARITY.EPIC: tag = "EPIC"; break;
             case Room.RARITY.LEGENDARY: tag = "LEGENDARY"; break;
+            case Room.RARITY.SPECIAL: tag = "SPECIAL"; break;
             default: tag = "COMMON"; break;
         }
 

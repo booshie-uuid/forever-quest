@@ -29,7 +29,7 @@ class Grammar
         article = blankExceptions.includes(firstWord) ? "" : article
 
         // check for phrases like "1 year" or "1 page"
-        if (!isNaN(firstWord) && ["year", "page", "wheeler"].includes(secondWord)) { article = "a"; }
+        if (!isNaN(firstWord) && ["year", "years", "page", "pages", "wheeler"].includes(secondWord)) { article = "a"; }
 
         return article;
     }

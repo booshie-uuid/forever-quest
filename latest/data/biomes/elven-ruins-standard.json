@@ -28,9 +28,12 @@
     ],
 
     "discoverables": [
-        { "key": "exit", "designation": "special", "name": "Waystone", "rarity": "special", "isExit": true, "spriteX": 2, "spriteY": 148 },
-        { "key": "treasure-rare", "designation": "container", "name": "Rare Treasure", "rarity": "rare", "isExit": true, "possibleLoot": [2], "spriteX": 40, "spriteY": 148 },
-        { "key": "treasure-epic", "designation": "container", "name": "Epic Treasure", "rarity": "epic", "isExit": true, "possibleLoot": [2,6,7,8], "spriteX": 78, "spriteY": 148 },
+        { 
+            "key": "exit", "designation": "special", "name": "Ancient Elven Waystone", "rarity": "special", "isExit": true, "spriteX": 2, "spriteY": 148,
+            "revealNarration": [ { "text": "At last! You have discovered @NAME and can move on from this place." } ]
+        },
+        { "key": "treasure-rare", "designation": "container", "name": "Rare Treasure", "rarity": "rare", "isExit": false, "possibleLoot": [2], "spriteX": 40, "spriteY": 148 },
+        { "key": "treasure-epic", "designation": "container", "name": "Epic Treasure", "rarity": "epic", "isExit": false, "possibleLoot": [2,6,7,8], "spriteX": 78, "spriteY": 148 },
         { 
             "key": "treasure-legenday", "designation": "container", "name": "Ancient Elven Treasure", "rarity": "legendary", "isExit": false, "possibleLoot": [2,6,7,8], "spriteX": 78, "spriteY": 148,
             "revealNarration": [ { "text": "Praise the Elf-Father! You have discovered @NAME!" } ]

@@ -16,7 +16,8 @@ class Room extends GameEntity
         UNCOMMON: "uncommon",
         RARE: "rare",
         EPIC: "epic",
-        LEGENDARY: "legendary"
+        LEGENDARY: "legendary",
+        SPECIAL: "special"
     };
 
     static generateEmptyRoom(map, col, row)
@@ -45,8 +46,8 @@ class Room extends GameEntity
         this.hasSouthDoor = (typeof hasSouthDoor !== "undefined")? hasSouthDoor == 1: false;
         this.hasWestDoor = (typeof hasWestDoor !== "undefined")? hasWestDoor == 1: false;
 
-        this.drawX = (this.col * 38) + 12;
-        this.drawY = (this.row * 38) + 12;
+        this.drawX = (this.col * 38);
+        this.drawY = (this.row * 38);
     }
 
     compress()
