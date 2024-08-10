@@ -68,7 +68,7 @@ class MapGenerator
         // using shift() so that the exit room is removed from the list of available deadends
         const exitRoom = deadends.shift();
 
-        exitRoom.type = Feature.TYPES.EXIT;
+        exitRoom.type = Discoverable.TYPES.EXIT;
         this.map.updateRoom(exitRoom);
 
         while(deadends.length > 0)
@@ -85,7 +85,7 @@ class MapGenerator
             if(this.map.undiscoveredLegendaryTreasures < this.map.maxLegendaryTreasures)
             {
                 // legendary treasures
-                this.generateEncounter(room, Feature.TYPES.TREASURE_LEGENDARY);
+                this.generateEncounter(room, Discoverable.TYPES.TREASURE_LEGENDARY);
                 this.map.undiscoveredLegendaryTreasures++;
             }
             else if(this.map.undefeatedLegendaryEnemies < this.map.maxLegendaryEnemies)
@@ -103,7 +103,7 @@ class MapGenerator
             else if(this.map.undiscoveredEpicTreasures < this.map.maxEpicTreasures)
             {
                 // epic treasures
-                this.generateEncounter(room, Feature.TYPES.TREASURE_EPIC);
+                this.generateEncounter(room, Discoverable.TYPES.TREASURE_EPIC);
                 this.map.undiscoveredEpicTreasures++;
             }
             else if(this.map.undefeatedRareEnemies < this.map.maxRareEnemies)
@@ -115,7 +115,7 @@ class MapGenerator
             else if(this.map.undiscoveredRareTreasures < this.map.maxRareTreasures)
             {
                 // rare treasures
-                this.generateEncounter(room, Feature.TYPES.TREASURE_RARE);
+                this.generateEncounter(room, Discoverable.TYPES.TREASURE_RARE);
                 this.map.undiscoveredRareTreasures++;
             }
             else

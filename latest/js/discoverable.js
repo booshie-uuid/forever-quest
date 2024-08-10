@@ -1,4 +1,4 @@
-class Feature
+class Discoverable
 {
     static TYPES = {
         EXIT: 200,
@@ -9,17 +9,17 @@ class Feature
         TREASURE_LEGENDARY: 205
     }
 
-    static containsFeature(room)
+    static containsDiscoverable(room)
     {
-        return Object.values(Feature.TYPES).includes(room.type);
+        return Object.values(Discoverable.TYPES).includes(room.type);
     }
 
     static fromRoom(biome, room)
     {
         // yeild if the room does not have an encounter
-        if(!Feature.containsFeature(room)) { return null; }
+        if(!Discoverable.containsDiscoverable(room)) { return null; }
 
-        return new Feature(biome, room.type);
+        return new Discoverable(biome, room.type);
     }
 
     constructor(biome, type)
@@ -27,19 +27,19 @@ class Feature
         this.biome = biome;
         this.type = type;
 
-        const feature = this.biome.features.find(feature => feature.key == this.type);
+        const discoverable = this.biome.discoverables.find(discoverable => discoverable.key == this.type);
 
-        this.isFaulted = (typeof feature === "undefined" || feature === null);
+        this.isFaulted = (typeof discoverable === "undefined" || discoverable === null);
 
         if(this.isFaulted) { return; }
 
-        this.name = feature.name;
-        this.isExit = feature.isExit;
-        this.isLootable = feature.isLootable;
-        this.spriteX = feature.spriteX;
-        this.spriteY = feature.spriteY;
-        this.loot = Array.isArray(feature.loot)? feature.loot : [];
-        this.revealNarration = (Array.isArray(feature.revealNarration))? feature.revealNarration: [];
+        this.name = discoverable.name;
+        this.isExit = discoverable.isExit;
+        this.isLootable = discoverable.isLootable;
+        this.spriteX = discoverable.spriteX;
+        this.spriteY = discoverable.spriteY;
+        this.loot = Array.isArray(discoverable.loot)? discoverable.loot : [];
+        this.revealNarration = (Array.isArray(discoverable.revealNarration))? discoverable.revealNarration: [];
     }
 
     getDisplayName()
@@ -48,10 +48,10 @@ class Feature
 
         switch(this.type)
         {
-            case Feature.TYPES.TREASURE_UNCOMMON: return "UNCOMMON";
-            case Feature.TYPES.TREASURE_RARE: tag = "RARE"; break;
-            case Feature.TYPES.TREASURE_EPIC: tag = "EPIC"; break;
-            case Feature.TYPES.TREASURE_LEGENDARY: tag = "LEGENDARY"; break;
+            case Discoverable.TYPES.TREASURE_UNCOMMON: return "UNCOMMON";
+            case Discoverable.TYPES.TREASURE_RARE: tag = "RARE"; break;
+            case Discoverable.TYPES.TREASURE_EPIC: tag = "EPIC"; break;
+            case Discoverable.TYPES.TREASURE_LEGENDARY: tag = "LEGENDARY"; break;
             default: tag = "COMMON"; break;
         }
 

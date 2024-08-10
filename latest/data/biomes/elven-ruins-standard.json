@@ -27,7 +27,7 @@
         { "key": 12, "name": "Ruin 3", "spriteX": 398, "spriteY": 40 }
     ],
 
-    "features": [
+    "discoverables": [
         { "key": 200, "name": "Waystone", "isExit": true, "isLootable": false, "spriteX": 2, "spriteY": 148 },
         { "key": 203, "name": "Rare Treasure", "isExit": false, "isLootable": true, "loot": [2], "spriteX": 40, "spriteY": 148 },
         { "key": 204, "name": "Epic Treasure", "isExit": false, "isLootable": true, "loot": [2,6,7,8], "spriteX": 78, "spriteY": 148 },

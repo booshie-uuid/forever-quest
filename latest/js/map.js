@@ -29,7 +29,7 @@ class Map
         this.currentCol = -1;
         this.currentRow = -1;
 
-        // encounter and feature properties
+        // encounter and discoverable properties
         this.undefeatedRareEnemies = 0;
         this.maxRareEnemies = SharedChance.range(6, 8);
 
@@ -179,12 +179,12 @@ class Map
             GEQ.enqueue(event);
         }
 
-        const feature = Feature.fromRoom(this.biome, room);
+        const discoverable = Discoverable.fromRoom(this.biome, room);
 
-        if(feature !== null)
+        if(discoverable !== null)
         {
-            // create an event to let the game engine know a feature has been discovered
-            const event = new GameEvent(GameEvent.TYPES.DISCOVERY, room, feature);
+            // create an event to let the game engine know a discoverable has been discovered
+            const event = new GameEvent(GameEvent.TYPES.DISCOVERY, room, discoverable);
 
             // add event to the global event queue
             GEQ.enqueue(event);
@@ -242,7 +242,7 @@ class Map
         this.gfx.drawSprite(this.texture, roomData.spriteX, roomData.spriteY, room.drawX + 1, room.drawY + 1, 36, 36);
 
         this.drawEncounter(room, room.drawX, room.drawY);
-        this.drawFeature(room, room.drawX, room.drawY);
+        this.drawDiscoverable(room, room.drawX, room.drawY);
     }
 
     drawRoomShadow(room)
@@ -268,15 +268,15 @@ class Map
         this.gfx.drawSprite(this.texture, spriteX, spriteY, room.drawX + 3 + spriteOffsetX, room.drawY - 8 + spriteOffsetY);
     }
 
-    drawFeature(room)
+    drawDiscoverable(room)
     {
-        const feature = Feature.fromRoom(this.biome, room);
+        const discoverable = Discoverable.fromRoom(this.biome, room);
 
-        // yeild if the feature could not be found
-        if(feature == null) { return; }
+        // yeild if the discoverable could not be found
+        if(discoverable == null) { return; }
 
-        const spriteX = feature.spriteX;
-        const spriteY = feature.spriteY;
+        const spriteX = discoverable.spriteX;
+        const spriteY = discoverable.spriteY;
 
         this.gfx.drawSprite(this.texture, spriteX, spriteY, room.drawX + 1, room.drawY + 1, 36, 36);
     }
@@ -306,7 +306,7 @@ class Map
                     this.gfx.drawRectangleOutline(room.drawX, room.drawY, 38, 38, "red", 2);
                 }
 
-                if(ENV.DEBUG_FLAGS.indexOf("highlightFeatures") >= 0 && Feature.containsFeature(room))
+                if(ENV.DEBUG_FLAGS.indexOf("highlightDiscoverables") >= 0 && Discoverable.containsDiscoverable(room))
                 {
                     this.gfx.drawRectangleOutline(room.drawX, room.drawY, 38, 38, "blue", 2);
                 }

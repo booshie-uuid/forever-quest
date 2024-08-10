@@ -145,17 +145,17 @@ class Engine
 
     handleDiscovery(event)
     {
-        const feature = event.data;
+        const discoverable = event.data;
 
-        if(feature.isFaulted)
+        if(discoverable.isFaulted)
         {
-            GEQ.enqueue(new GameEvent(GameEvent.TYPES.ERROR, GameEntity.SPECIAL_ENTITIES.ERROR, "We somehow ran into a faulty feature! Perhaps the realm server is toast?"));
+            GEQ.enqueue(new GameEvent(GameEvent.TYPES.ERROR, GameEntity.SPECIAL_ENTITIES.ERROR, "We somehow ran into a faulty discovery! Perhaps the realm server is toast?"));
             return;
         }
 
-        this.activeFeature = feature;
+        this.activeDiscoverable = discoverable;
         
-        feature.triggerRevealNarration();
+        discoverable.triggerRevealNarration();
     }
 
     movePlayer()

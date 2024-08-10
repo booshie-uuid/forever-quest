@@ -44,7 +44,7 @@
     <script src="<?= $ENV->release ?>/js/directions.js"></script>
     <script src="<?= $ENV->release ?>/js/biome.js"></script>
     <script src="<?= $ENV->release ?>/js/encounter.js"></script>
-    <script src="<?= $ENV->release ?>/js/feature.js"></script>
+    <script src="<?= $ENV->release ?>/js/discoverable.js"></script>
     <script src="<?= $ENV->release ?>/js/room.js"></script>
     <script src="<?= $ENV->release ?>/js/mapGenerator.js"></script>
     <script src="<?= $ENV->release ?>/js/map.js"></script>
