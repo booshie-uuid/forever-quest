@@ -38,7 +38,7 @@ class MapGenerator
         let deadends = rooms.filter(room => room.type == Room.TYPES.DEADEND).sort(() => Math.random() - 0.5);      
 
         // close off a few loops to make the dungeon feel more interconnected
-        this.generateLoops(Math.min(3, deadends.length), deadends);
+        this.generateLoops(Math.min(4, deadends.length), deadends);
 
         // update the list of deadends to remove any rooms that are no longer deadends
         // due to the closing off of loops
@@ -327,8 +327,11 @@ class MapGenerator
         let loops = count;
         let loopAttempts = 0;
 
-        const allDirectionDeltas = DIRECTIONS.getDirectionsDeltas(DIRECTIONS.getAllDirections());
-        const keyDirectionDeltas = DIRECTIONS.getDirectionsDeltas(DIRECTIONS.getKeyDirections());
+        const allDirections = DIRECTIONS.getAllDirections();
+        const keyDirections = DIRECTIONS.getKeyDirections();
+
+        const allDirectionDeltas = DIRECTIONS.getDirectionsDeltas(allDirections);
+        const keyDirectionDeltas = DIRECTIONS.getDirectionsDeltas(keyDirections);
  
         for(const room of deadends)
         {

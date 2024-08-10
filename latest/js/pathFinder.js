@@ -12,7 +12,7 @@ class PathNode
 		this.currentCost = 0;
 		this.estimatedTotalCost = 0;
 
-		this.traversable = (room.type != Room.TYPES.EMPTY);
+		this.traversable = (room.type != Room.TYPES.EMPTY && room.status > 0);
 	}
 }
 

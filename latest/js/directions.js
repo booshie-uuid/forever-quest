@@ -48,7 +48,7 @@ class DIRECTIONS
     {
         const deltas = [];
 
-        for(const direction in directions)
+        for(const direction of directions)
         {
             const delta = DIRECTIONS.getDirectionDeltas(direction);
 
