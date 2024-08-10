@@ -140,16 +140,22 @@ class Engine
 
         this.activeEncounter = encounter;
         
-        // send the player a message revealing the encounter
-        const revealMessage = new ChatMessage(ChatMessage.TYPES.SHOUT, GameEntity.SPECIAL_ENTITIES.NARRATOR, encounter.getRevealNarration());
-
-        // add reveal message to global event queue
-        GEQ.enqueue(new GameEvent(GameEvent.TYPES.MESSAGE, GameEntity.SPECIAL_ENTITIES.NARRATOR, revealMessage));
+        encounter.triggerRevealNarration();
     }
 
     handleDiscovery(event)
     {
         const feature = event.data;
+
+        if(feature.isFaulted)
+        {
+            GEQ.enqueue(new GameEvent(GameEvent.TYPES.ERROR, GameEntity.SPECIAL_ENTITIES.ERROR, "We somehow ran into a faulty feature! Perhaps the realm server is toast?"));
+            return;
+        }
+
+        this.activeFeature = feature;
+        
+        feature.triggerRevealNarration();
     }
 
     movePlayer()

@@ -39,10 +39,11 @@ class Feature
         this.spriteX = feature.spriteX;
         this.spriteY = feature.spriteY;
         this.loot = Array.isArray(feature.loot)? feature.loot : [];
+        this.revealNarration = (Array.isArray(feature.revealNarration))? feature.revealNarration: [];
     }
 
-    getChatName()
-    {       
+    getDisplayName()
+    {
         let tag = "COMMON";
 
         switch(this.type)
@@ -55,5 +56,21 @@ class Feature
         }
 
         return `[${tag}][${this.name}][/${tag}]`;
+    }
+
+    triggerRevealNarration()
+    {
+        let narration = (this.revealNarration.length > 0)? SharedChance.pick(this.revealNarration).text: "You have discovered @NAME!";
+
+        let article = Grammar.getIndefiniteArticle(this.name);
+        let prefix = (article)? `${article} ` : "";
+
+        narration = narration.replace("@NAME", `${prefix}${this.getDisplayName()}`);
+
+        // prepare a message for the player revealing the discovery
+        const revealMessage = new ChatMessage(ChatMessage.TYPES.SHOUT, GameEntity.SPECIAL_ENTITIES.NARRATOR, narration);
+
+        // add reveal message to global event queue
+        GEQ.enqueue(new GameEvent(GameEvent.TYPES.MESSAGE, GameEntity.SPECIAL_ENTITIES.NARRATOR, revealMessage));
     }
 }

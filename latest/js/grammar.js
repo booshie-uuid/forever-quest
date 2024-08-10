@@ -3,7 +3,7 @@ class Grammar
     static withIndefiniteArticle(text)
     {
         const article = Grammar.getIndefiniteArticle(text);
-        const prefix = article ? `${article} ` : "";
+        const prefix = (article)? `${article} `: "";
 
         return `${prefix} ${text}`;
     }

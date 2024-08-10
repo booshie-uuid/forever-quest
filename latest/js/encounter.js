@@ -76,11 +76,20 @@ class Encounter
         return `[${tag}][${this.name}][/${tag}]`;
     }
 
-    getRevealNarration()
+    triggerRevealNarration()
     {
         let narration = (this.revealNarration.length > 0)? SharedChance.pick(this.revealNarration).text: "You have encountered @NAME!";
 
-        return narration.replace("@NAME", Grammar.withIndefiniteArticle(this.getDisplayName()));
+        let article = Grammar.getIndefiniteArticle(this.name);
+        let prefix = (article)? `${article} ` : "";
+
+        narration = narration.replace("@NAME", `${prefix}${this.getDisplayName()}`);
+
+        // prepare a message for the player revealing the encounter
+        const revealMessage = new ChatMessage(ChatMessage.TYPES.SHOUT, GameEntity.SPECIAL_ENTITIES.NARRATOR, narration);
+
+        // add reveal message to global event queue
+        GEQ.enqueue(new GameEvent(GameEvent.TYPES.MESSAGE, GameEntity.SPECIAL_ENTITIES.NARRATOR, revealMessage));
     }
 
 }
