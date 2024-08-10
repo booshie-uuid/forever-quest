@@ -114,6 +114,10 @@ class Engine
                     this.handleError(event);
                     break;
 
+                case GameEvent.TYPES.DIAGNOSTIC:
+                    this.handleDiagnostic(event);
+                    break;
+
                 case GameEvent.TYPES.ENCOUNTER:
                     this.handleEncounter(event);
                     break;
@@ -282,6 +286,11 @@ class Engine
     error(message)
     {
         this.chat.addMessage("SYSTEM", message, "system");
+    }
+
+    handleDiagnostic(event)
+    {
+        console.log(event.data);
     }
 
     handleError(event)

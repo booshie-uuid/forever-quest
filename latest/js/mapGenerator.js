@@ -68,7 +68,7 @@ class MapGenerator
         // using shift() so that the exit room is removed from the list of available deadends
         const exitRoom = deadends.shift();
 
-        exitRoom.type = Discoverable.TYPES.EXIT;
+        exitRoom.type = Room.TYPES.EXIT;
         this.map.updateRoom(exitRoom);
 
         while(deadends.length > 0)
@@ -85,37 +85,37 @@ class MapGenerator
             if(this.map.undiscoveredLegendaryTreasures < this.map.maxLegendaryTreasures)
             {
                 // legendary treasures
-                this.generateEncounter(room, Discoverable.TYPES.TREASURE_LEGENDARY);
+                this.generateDiscoverable(room, Room.RARITY.LEGENDARY);
                 this.map.undiscoveredLegendaryTreasures++;
             }
             else if(this.map.undefeatedLegendaryEnemies < this.map.maxLegendaryEnemies)
             {
                 // legendary enemies
-                this.generateEncounter(room, Encounter.TYPES.ENEMY_LEGENDARY);
+                this.generateEncounter(room, Room.RARITY.LEGENDARY);
                 this.map.undefeatedLegendaryEnemies++;
             }
             else if(this.map.undefeatedEpicEnemies < this.map.maxEpicEnemies)
             {
                 // epic enemies
-                this.generateEncounter(room, Encounter.TYPES.ENEMY_EPIC);
+                this.generateEncounter(room, Room.RARITY.EPIC);
                 this.map.undefeatedEpicEnemies++;
             }
             else if(this.map.undiscoveredEpicTreasures < this.map.maxEpicTreasures)
             {
                 // epic treasures
-                this.generateEncounter(room, Discoverable.TYPES.TREASURE_EPIC);
+                this.generateDiscoverable(room, Room.RARITY.EPIC);
                 this.map.undiscoveredEpicTreasures++;
             }
             else if(this.map.undefeatedRareEnemies < this.map.maxRareEnemies)
             {
                 // rare enemies
-                this.generateEncounter(room, Encounter.TYPES.ENEMY_RARE);
+                this.generateEncounter(room, Room.RARITY.RARE);
                 this.map.undefeatedRareEnemies++;
             }
             else if(this.map.undiscoveredRareTreasures < this.map.maxRareTreasures)
             {
                 // rare treasures
-                this.generateEncounter(room, Discoverable.TYPES.TREASURE_RARE);
+                this.generateDiscoverable(room, Room.RARITY.RARE);
                 this.map.undiscoveredRareTreasures++;
             }
             else
@@ -392,9 +392,19 @@ class MapGenerator
         }
     }
     
-    generateEncounter(room, type)
+    generateEncounter(room, rarity)
     {
-        room.type = type;
+        room.type = Room.TYPES.ENCOUNTER;
+        room.rarity = rarity;
+
+        this.map.updateRoom(room);
+    }
+
+    generateDiscoverable(room, rarity)
+    {
+        room.type = Room.TYPES.DISCOVERABLE;
+        room.rarity = rarity;
+
         this.map.updateRoom(room);
     }
 

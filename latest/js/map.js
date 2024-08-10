@@ -109,58 +109,44 @@ class Map
     {
         const room = this.getRoom(x, y);
 
-        if(room.status > 0) { return; } // already explored
+        // yield if empty or already explored
+        if(room.type == Room.TYPES.EMPTY || room.status > 0) { return; }
 
-        let roomTypes = [];
+        let types = [];
 
-        if(room.type == 1)
+        if(room.type == Room.TYPES.REGULAR)
         {    
-            roomTypes = this.biome.commonRooms;
+            types = this.biome.commonRooms;
         }
-        else if(room.type > 1)
+        else
         {
-            roomTypes = this.biome.rareRooms;
+            types = this.biome.rareRooms;
         }
 
         let variant = 0; 
         
         if(SharedChance.range(0, 10) < 8)
         {
-            variant = (roomTypes.length > 0)? SharedChance.range(0, roomTypes.length - 1): 0;
+            variant = (types.length > 0)? SharedChance.range(0, types.length - 1): 0;
         }
         else
         {
-            variant = (roomTypes.length > 1)? SharedChance.range(0, 1): 0;
+            variant = (types.length > 1)? SharedChance.range(0, 1): 0;
         }
 
-        let encounterKeys = [];
+        let childKey = null;
 
         switch(room.type)
         {
-            case Encounter.TYPES.ENEMY_COMMON: 
-                encounterKeys = this.biome.commonEncounters.map(encounter => encounter.key); 
-                break;
-
-            case Encounter.TYPES.ENEMY_RARE: 
-                encounterKeys = this.biome.rareEncounters.map(encounter => encounter.key); 
-                break;
-
-            case Encounter.TYPES.ENEMY_EPIC: 
-                encounterKeys = this.biome.epicEncounters.map(encounter => encounter.key); 
-                break;
-
-            case Encounter.TYPES.ENEMY_LEGENDARY: 
-                encounterKeys = this.biome.legendaryEncounters.map(encounter => encounter.key); 
-                break;
-
-            default: break;
+            case Room.TYPES.ENCOUNTER: childKey = Encounter.getRandomKey(this.biome, room); break;
+            case Room.TYPES.DISCOVERABLE: childKey = Discoverable.getRandomKey(this.biome, room); break;
+            default: null; break;
         }
-
-        const encounterKey = (encounterKeys.length > 0)? SharedChance.pick(encounterKeys): 0;
        
         room.status = 1; // 1 = explored
         room.variant = variant;
-        room.encounterKey = encounterKey;
+        room.childKey = childKey;
+
         room.hasNorthDoor = room.isConnected(DIRECTIONS.NORTH);
         room.hasEastDoor = room.isConnected(DIRECTIONS.EAST);
         room.hasSouthDoor = room.isConnected(DIRECTIONS.SOUTH);
@@ -213,6 +199,9 @@ class Map
 
     drawRoom(room)
     {
+        // yield if empty or unexplored
+        if(room.type == Room.TYPES.EMPTY || room.status == 0) { return; }
+
         // get neighbors in connectable directions (N, E, S, W)
         const neighbors = room.getNeighborsByDirection(DIRECTIONS.getKeyDirections());
 
@@ -223,18 +212,18 @@ class Map
 
         this.gfx.drawRectangle(room.drawX, room.drawY, 38, 38, this.biome.theme.backgroundColor);
 
-        let roomTypes = [];
+        let types = [];
 
-        if(room.type == 1)
+        if(room.type == Room.TYPES.REGULAR)
         {    
-            roomTypes = this.biome.commonRooms;
+            types = this.biome.commonRooms;
         }
-        else if(room.type > 1)
+        else
         {
-            roomTypes = this.biome.rareRooms;
+            types = this.biome.rareRooms;
         }
 
-        const roomData = roomTypes[room.variant];
+        const roomData = types[room.variant];
 
         // yeild if no data can be found about the room type
         if(roomData === null) { return; }
@@ -255,9 +244,12 @@ class Map
 
     drawEncounter(room)
     {
+        // yeild if the room does not contain an encounter
+        if(!Encounter.containsEncounter(room)) { return; }
+
         const encounter = Encounter.fromRoom(this.biome, room);
 
-        // yield if the encounter is not found
+        // yield if a valid encounter can not be found
         if(encounter === null) { return; }
 
         const spriteX = encounter.spriteX;
@@ -270,6 +262,9 @@ class Map
 
     drawDiscoverable(room)
     {
+        // yeild if the room does not contain an encounter
+        if(!Discoverable.containsDiscoverable(room)) { return; }
+        
         const discoverable = Discoverable.fromRoom(this.biome, room);
 
         // yeild if the discoverable could not be found

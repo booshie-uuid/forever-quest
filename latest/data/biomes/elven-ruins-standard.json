@@ -28,11 +28,11 @@
     ],
 
     "discoverables": [
-        { "key": 200, "name": "Waystone", "isExit": true, "isLootable": false, "spriteX": 2, "spriteY": 148 },
-        { "key": 203, "name": "Rare Treasure", "isExit": false, "isLootable": true, "loot": [2], "spriteX": 40, "spriteY": 148 },
-        { "key": 204, "name": "Epic Treasure", "isExit": false, "isLootable": true, "loot": [2,6,7,8], "spriteX": 78, "spriteY": 148 },
+        { "key": "exit", "designation": "special", "name": "Waystone", "rarity": "special", "isExit": true, "spriteX": 2, "spriteY": 148 },
+        { "key": "treasure-rare", "designation": "container", "name": "Rare Treasure", "rarity": "rare", "isExit": true, "possibleLoot": [2], "spriteX": 40, "spriteY": 148 },
+        { "key": "treasure-epic", "designation": "container", "name": "Epic Treasure", "rarity": "epic", "isExit": true, "possibleLoot": [2,6,7,8], "spriteX": 78, "spriteY": 148 },
         { 
-            "key": 205, "name": "Ancient Elven Treasure", "isExit": false, "isLootable": true, "loot": [2,6,7,8], "spriteX": 78, "spriteY": 148,
+            "key": "treasure-legenday", "designation": "container", "name": "Ancient Elven Treasure", "rarity": "legendary", "isExit": false, "possibleLoot": [2,6,7,8], "spriteX": 78, "spriteY": 148,
             "revealNarration": [ { "text": "Praise the Elf-Father! You have discovered @NAME!" } ]
         }
     ],
@@ -40,46 +40,50 @@
     "commonEncounters": [
         {
             "key": 1,
+            "designation": "npc",
             "name": "Forest Shroom",
             "allegiance": "Forest Creatures",
             "baseDisposition": "wary",
             "baseLevel": 1,
             "spriteX": 2,
             "spriteY": 2,
-            "loot": [],
+            "possibleLoot": [],
             "gaurenteedLoot": []
         },
         {
             "key": 2,
+            "designation": "npc",
             "name": "Angry Rat",
             "allegiance": "forest creatures",
             "baseDisposition": "hostile",
             "baseLevel": 1,
             "spriteX": 36,
             "spriteY": 2,
-            "loot": [3,4],
+            "possibleLoot": [3,4],
             "gaurenteedLoot": [3]
         },
         {
             "key": 6,
+            "designation": "npc",
             "name": "Red Goblin Peon",
             "allegiance": "Red Goblins",
             "baseDisposition": "hostile",
             "baseLevel": 1,
             "spriteX": 172,
             "spriteY": 2,
-            "loot": [3],
+            "possibleLoot": [3],
             "gaurenteedLoot": []
         },
         {
             "key": 7,
+            "designation": "npc",
             "name": "Forest Elf Novice",
             "allegiance": "Forest Elves",
             "baseDisposition": "hostile",
             "baseLevel": 1,
             "spriteX": 172,
             "spriteY": 2,
-            "loot": [4,5],
+            "possibleLoot": [4,5],
             "gaurenteedLoot": []
         }
     ],
@@ -87,17 +91,19 @@
     "rareEncounters": [
         {
             "key": 9,
+            "designation": "npc",
             "name": "Red Goblin Scout",
             "allegiance": "Red Goblins",
             "baseDisposition": "hostile",
             "baseLevel": 2,
             "spriteX": 2,
             "spriteY": 36,
-            "loot": [3,4,6],
+            "possibleLoot": [3,4,6],
             "gaurenteedLoot": []
         },
         {
             "key": 10,
+            "designation": "npc",
             "name": "Red Goblin Brute",
             "allegiance": "Red Goblins",
             "baseDisposition": "hostile",
@@ -105,11 +111,12 @@
             "spriteX": 36,
             "spriteY": 36,
             "spriteOffsetX": -1,
-            "loot": [4,6],
+            "possibleLoot": [4,6],
             "gaurenteedLoot": []
         },
         {
             "key": 11,
+            "designation": "npc",
             "name": "Red Goblin Butcher",
             "allegiance": "Red Goblins",
             "baseDisposition": "hostile",
@@ -117,33 +124,36 @@
             "spriteX": 70,
             "spriteY": 36,
             "spriteOffsetX": 4,
-            "loot": [3,4,5,6,7],
+            "possibleLoot": [3,4,5,6,7],
             "gaurenteedLoot": []
         },
         {
             "key": 12,
+            "designation": "npc",
             "name": "Red Goblin Fighter",
             "allegiance": "Red Goblins",
             "baseDisposition": "hostile",
             "baseLevel": 2,
             "spriteX": 104,
             "spriteY": 36,
-            "loot": [4,6],
+            "possibleLoot": [4,6],
             "gaurenteedLoot": []
         },
         {
             "key": 15,
+            "designation": "npc",
             "name": "Forest Elf Scout",
             "allegiance": "Forest Elves",
             "baseDisposition": "hostile",
             "baseLevel": 2,
             "spriteX": 206,
             "spriteY": 36,
-            "loot": [4,5,6],
+            "possibleLoot": [4,5,6],
             "gaurenteedLoot": []
         },
         {
             "key": 16,
+            "designation": "npc",
             "name": "Forest Elf Archer",
             "allegiance": "Forest Elves",
             "baseDisposition": "hostile",
@@ -151,7 +161,7 @@
             "spriteX": 240,
             "spriteY": 36,
             "spriteOffsetX": 2, 
-            "loot": [2,4,5,6,7],
+            "possibleLoot": [2,4,5,6,7],
             "gaurenteedLoot": []
         }
     ],
@@ -159,6 +169,7 @@
     "epicEncounters": [
         {
             "key": 17,
+            "designation": "npc",
             "name": "Red Goblin Brawler",
             "allegiance": "Red Goblins",
             "baseDisposition": "hostile",
@@ -166,40 +177,43 @@
             "spriteX": 2,
             "spriteY": 70,
             "spriteOffsetX": 1,
-            "loot": [4,5,6,7],
+            "possibleLoot": [4,5,6,7],
             "gaurenteedLoot": []
         },
         {
             "key": 18,
+            "designation": "npc",
             "name": "Red Goblin Gladiator",
             "allegiance": "Red Goblins",
             "baseDisposition": "hostile",
             "baseLevel": 2,
             "spriteX": 36,
             "spriteY": 70,
-            "loot": [4,6,8],
+            "possibleLoot": [4,6,8],
             "gaurenteedLoot": []
         },
         {
             "key": 23,
+            "designation": "npc",
             "name": "Forest Elf Trickster",
             "allegiance": "Forest Elves",
             "baseDisposition": "hostile",
             "baseLevel": 2,
             "spriteX": 206,
             "spriteY": 70,
-            "loot": [1,4,5,6,7],
+            "possibleLoot": [1,4,5,6,7],
             "gaurenteedLoot": [1]
         },
         {
             "key": 24,
+            "designation": "npc",
             "name": "Forest Elf Druid",
             "allegiance": "Forest Elves",
             "baseDisposition": "hostile",
             "baseLevel": 2,
             "spriteX": 240,
             "spriteY": 70,
-            "loot": [2,4,5,7],
+            "possibleLoot": [2,4,5,7],
             "gaurenteedLoot": []
         }
     ],
@@ -207,13 +221,14 @@
     "legendaryEncounters": [
         {
             "key": 25,
+            "designation": "npc",
             "name": "Minor Forest God",
             "allegiance": "Forest Elves",
             "baseDisposition": "hostile",
             "baseLevel": 2,
             "spriteX": 2,
             "spriteY": 104,
-            "loot": [4,5,7,8],
+            "possibleLoot": [4,5,7,8],
             "gaurenteedLoot": [2],
             "revealNarration": [
                 { "text": "Sweet Mother Nature! You have come face to face with @NAME!" },

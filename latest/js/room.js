@@ -4,20 +4,24 @@ class Room extends GameEntity
         EMPTY: 0,
         REGULAR: 1,
         DEADEND: 2,
-        SPAWN: 3
+        SPAWN: 3,
+        EXIT: 4,
+        ENCOUNTER: 5,
+        DISCOVERABLE: 6
     }
 
-    static generateEmptyRoom(map, col, row, type)
+    static RARITY = {
+        UNKNOWN: "unknown",
+        COMMON: "common",
+        UNCOMMON: "uncommon",
+        RARE: "rare",
+        EPIC: "epic",
+        LEGENDARY: "legendary"
+    };
+
+    static generateEmptyRoom(map, col, row)
     {
-        const data = Array(10).fill(0);
-        const status = 0; // 0 = unexplored
-
-        data[0] = status;
-        data[1] = col;
-        data[2] = row;
-        data[3] = type;
-
-        return new Room(map, [status, col, row, type, 0, 0, 0, 0, 0, 0]);
+        return new Room(map, [col, row]);
     }
 
     constructor(map, data)
@@ -26,17 +30,20 @@ class Room extends GameEntity
 
         this.map = map;
 
-        this.status = data[0];
-        this.col = data[1];
-        this.row = data[2];
-        this.type = data[3];
-        this.variant = data[4];
-        this.encounterKey = data[5];
+        const [col, row, status, type, variant, rarity, childKey, hasNorthDoor, hasEastDoor, hasSouthDoor, hasWestDoor] = data;
 
-        this.hasNorthDoor = data[6] == 1;
-        this.hasEastDoor = data[7] == 1;
-        this.hasSouthDoor = data[8] == 1;
-        this.hasWestDoor = data[9] == 1;
+        this.col = (typeof col !== "undefined")? col: 0;
+        this.row = (typeof row !== "undefined")? row: 0;
+        this.status = (typeof status !== "undefined")? status: 0;
+        this.type = (typeof type !== "undefined")? type: 0;
+        this.variant = (typeof variant !== "undefined")? variant: 0;
+        this.rarity = (typeof rarity !== "undefined")? rarity: 0;
+        this.childKey = (typeof childKey !== "undefined")? childKey: null;
+
+        this.hasNorthDoor = (typeof hasNorthDoor !== "undefined")? hasNorthDoor == 1: false;
+        this.hasEastDoor = (typeof hasEastDoor !== "undefined")? hasEastDoor == 1: false;
+        this.hasSouthDoor = (typeof hasSouthDoor !== "undefined")? hasSouthDoor == 1: false;
+        this.hasWestDoor = (typeof hasWestDoor !== "undefined")? hasWestDoor == 1: false;
 
         this.drawX = (this.col * 38) + 12;
         this.drawY = (this.row * 38) + 12;

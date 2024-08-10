@@ -1,16 +1,26 @@
-class Encounter
+class Encounter extends Lootable
 {
-    static TYPES = {
-        ENEMY_COMMON: 100,
-        ENEMY_UNCOMMON: 101,
-        ENEMY_RARE: 102,
-        ENEMY_EPIC: 103,
-        ENEMY_LEGENDARY: 104
-    }
-
     static containsEncounter(room)
     {
-        return Object.values(Encounter.TYPES).includes(room.type);
+        return room.type == Room.TYPES.ENCOUNTER;
+    }
+
+    static getRandomKey(biome, room)
+    {
+        let encounters = [];
+
+        switch(room.rarity)
+        {
+            case Room.RARITY.COMMON: encounters = biome.commonEncounters; break;
+            case Room.RARITY.RARE: encounters = biome.rareEncounters; break;
+            case Room.RARITY.EPIC: encounters = biome.epicEncounters; break;
+            case Room.RARITY.LEGENDARY: encounters = biome.legendaryEncounters; break;
+            default: break;
+        }
+
+        if(typeof encounters === "undefined" || encounters === null || encounters.length == 0) { return null; }
+
+        return SharedChance.pick(encounters).key;
     }
 
     static fromRoom(biome, room)
@@ -18,58 +28,69 @@ class Encounter
         // yeild if the room does not have an encounter
         if(!Encounter.containsEncounter(room)) { return null; }
 
-        return new Encounter(biome, room.type, room.encounterKey);
+        return new Encounter(biome, room.rarity, room.childKey);
     }
 
-    constructor(biome, type, encounterKey)
+    constructor(biome, rarity, encounterKey)
     {
-        this.biome = biome;
-        this.type = type;
-        this.encounterKey = encounterKey;
-
         // load encounter data
         let encounters = [];
 
-        switch(this.type)
+        switch(rarity)
         {
-            case Encounter.TYPES.ENEMY_COMMON: encounters = this.biome.commonEncounters; break;
-            case Encounter.TYPES.ENEMY_RARE: encounters = this.biome.rareEncounters; break;
-            case Encounter.TYPES.ENEMY_EPIC: encounters = this.biome.epicEncounters; break;
-            case Encounter.TYPES.ENEMY_LEGENDARY: encounters = this.biome.legendaryEncounters; break;
+            case Room.RARITY.COMMON: encounters = biome.commonEncounters; break;
+            case Room.RARITY.RARE: encounters = biome.rareEncounters; break;
+            case Room.RARITY.EPIC: encounters = biome.epicEncounters; break;
+            case Room.RARITY.LEGENDARY: encounters = biome.legendaryEncounters; break;
             default: break;
         }
 
-        const encounter = encounters.find(encounter => encounter.key == this.encounterKey);
+        const encounterData = encounters.find(encounter => encounter.key == encounterKey);
+
+        if(typeof encounterData === "undefined" || encounterData === null)
+        {
+            // yield if the encounter data can't be loaded
+            super(GameEntity.DESIGNATIONS.UNKNOWN, "UNKNOWN", null);
+            this.isFaulted = true;
+            
+            return;
+        }
+
+        // initialise inherited properties
+        super(encounterData.designation, encounterData.name, biome);
 
         // key state properties
-        this.isFaulted = (typeof encounter === "undefined" || encounter === null);
+        this.isFaulted = false;
         this.isResolved = false;
+
+        this.rarity = rarity;
+        this.encounterKey = encounterKey;
 
         if(this.isFaulted) { return; }
 
         // map encounter data
-        this.name = encounter.name;
-        this.allegiance = encounter.allegiance;
-        this.baseDisposition = encounter.baseDisposition;
-        this.baseLevel = encounter.baseLevel;
-        this.baseHealth = encounter.baseHealth;
-        this.spriteX = encounter.spriteX;
-        this.spriteY = encounter.spriteY;
-        this.loot = encounter.loot;
-        this.gaurenteedLoot = encounter.gaurenteedLoot;
-        this.revealNarration = (Array.isArray(encounter.revealNarration))? encounter.revealNarration: [];
+        this.name = encounterData.name;
+        this.allegiance = encounterData.allegiance;
+        this.baseDisposition = encounterData.baseDisposition;
+        this.baseLevel = encounterData.baseLevel;
+        this.baseHealth = encounterData.baseHealth;
+        this.spriteX = encounterData.spriteX;
+        this.spriteY = encounterData.spriteY;
+        this.revealNarration = (Array.isArray(encounterData.revealNarration))? encounterData.revealNarration: [];
+
+        super.setLoot([encounterData.gaurenteedLoot], encounterData.possibleLoot);
     }
 
     getDisplayName()
     {       
         let tag = "COMMON";
 
-        switch(this.type)
+        switch(this.rarity)
         {
-            case Encounter.TYPES.ENEMY_UNCOMMON: return "UNCOMMON";
-            case Encounter.TYPES.ENEMY_RARE: tag = "RARE"; break;
-            case Encounter.TYPES.ENEMY_EPIC: tag = "EPIC"; break;
-            case Encounter.TYPES.ENEMY_LEGENDARY: tag = "LEGENDARY"; break;
+            case Room.RARITY.UNCOMMON: return "UNCOMMON";
+            case Room.RARITY.RARE: tag = "RARE"; break;
+            case Room.RARITY.EPIC: tag = "EPIC"; break;
+            case Room.RARITY.LEGENDARY: tag = "LEGENDARY"; break;
             default: tag = "COMMON"; break;
         }
 

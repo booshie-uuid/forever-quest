@@ -1,17 +1,17 @@
-class Discoverable
+class Discoverable extends Lootable
 {
-    static TYPES = {
-        EXIT: 200,
-        TREASURE_COMMON: 201,
-        TREASURE_UNCOMMON: 202,
-        TREASURE_RARE: 203,
-        TREASURE_EPIC: 204,
-        TREASURE_LEGENDARY: 205
-    }
-
     static containsDiscoverable(room)
     {
-        return Object.values(Discoverable.TYPES).includes(room.type);
+        return room.type == Room.TYPES.DISCOVERABLE;
+    }
+
+    static getRandomKey(biome, room)
+    {
+        let discoverables = biome.discoverables.filter(discoverable => discoverable.rarity == room.rarity);
+
+        if(typeof discoverables === "undefined" || discoverables === null || discoverables.length == 0) { return null; }
+
+        return SharedChance.pick(discoverables).key;
     }
 
     static fromRoom(biome, room)
@@ -19,20 +19,25 @@ class Discoverable
         // yeild if the room does not have an encounter
         if(!Discoverable.containsDiscoverable(room)) { return null; }
 
-        return new Discoverable(biome, room.type);
+        return new Discoverable(biome, room.rarity, room.childKey);
     }
 
-    constructor(biome, type)
+    constructor(biome, rarity, discoverableKey)
     {
-        this.biome = biome;
-        this.type = type;
+        const discoverable = biome.discoverables.find(discoverable => discoverable.key == discoverableKey);
 
-        const discoverable = this.biome.discoverables.find(discoverable => discoverable.key == this.type);
+        if(typeof discoverable === "undefined" || discoverable === null)
+        {
+            // yield if the discoverable data can't be loaded
+            super(GameEntity.DESIGNATIONS.UNKNOWN, "UNKNOWN", null);
+            this.isFaulted = true;
 
-        this.isFaulted = (typeof discoverable === "undefined" || discoverable === null);
+            return;
+        }
 
-        if(this.isFaulted) { return; }
+        super(discoverable.designation, discoverable.name, biome);
 
+        this.rarity = rarity;
         this.name = discoverable.name;
         this.isExit = discoverable.isExit;
         this.isLootable = discoverable.isLootable;
@@ -46,12 +51,12 @@ class Discoverable
     {
         let tag = "COMMON";
 
-        switch(this.type)
+        switch(this.rarity)
         {
-            case Discoverable.TYPES.TREASURE_UNCOMMON: return "UNCOMMON";
-            case Discoverable.TYPES.TREASURE_RARE: tag = "RARE"; break;
-            case Discoverable.TYPES.TREASURE_EPIC: tag = "EPIC"; break;
-            case Discoverable.TYPES.TREASURE_LEGENDARY: tag = "LEGENDARY"; break;
+            case Room.RARITY.UNCOMMON: return "UNCOMMON";
+            case Room.RARITY.RARE: tag = "RARE"; break;
+            case Room.RARITY.EPIC: tag = "EPIC"; break;
+            case Room.RARITY.LEGENDARY: tag = "LEGENDARY"; break;
             default: tag = "COMMON"; break;
         }
 
