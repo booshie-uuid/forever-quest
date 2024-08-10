@@ -31,9 +31,13 @@
     </script>
 
     <script src="<?= $ENV->release ?>/js/number.js"></script>
+    <script src="<?= $ENV->release ?>/js/grammar.js"></script>
     <script src="<?= $ENV->release ?>/js/sharedChance.js"></script>
     <script src="<?= $ENV->release ?>/js/gameData.js"></script>
     <script src="<?= $ENV->release ?>/js/gameTexture.js"></script>
+    <script src="<?= $ENV->release ?>/js/gameEntity.js"></script>
+    <script src="<?= $ENV->release ?>/js/gameEvent.js"></script>
+    <script src="<?= $ENV->release ?>/js/gameEventQueue.js"></script>
     <script src="<?= $ENV->release ?>/js/gfx.js"></script>
     <script src="<?= $ENV->release ?>/js/mouse.js"></script>
 
@@ -44,6 +48,7 @@
     <script src="<?= $ENV->release ?>/js/room.js"></script>
     <script src="<?= $ENV->release ?>/js/mapGenerator.js"></script>
     <script src="<?= $ENV->release ?>/js/map.js"></script>
+    <script src="<?= $ENV->release ?>/js/chatMessage.js"></script>
     <script src="<?= $ENV->release ?>/js/chat.js"></script>
     <script src="<?= $ENV->release ?>/js/engine.js"></script>
 

@@ -8,13 +8,12 @@ class Map
         MAP_READY: 4
     }
 
-    constructor(gfx, seed)
+    constructor(gfx)
     {
         // key dependencies
         this.gfx = gfx;
-        this.chance = new SharedChance(seed);
         this.biome = new Biome("elven-ruins-standard");
-        this.generator = new MapGenerator(this, this.chance);
+        this.generator = new MapGenerator(this, SharedChance);
         this.texture = null;
         this.events = [];
 
@@ -32,19 +31,19 @@ class Map
 
         // encounter and feature properties
         this.undefeatedRareEnemies = 0;
-        this.maxRareEnemies = this.chance.range(6, 8);
+        this.maxRareEnemies = SharedChance.range(6, 8);
 
         this.undefeatedEpicEnemies = 0;
-        this.maxEpicEnemies = this.chance.range(2, 3);
+        this.maxEpicEnemies = SharedChance.range(2, 3);
 
         this.undefeatedLegendaryEnemies = 0;
         this.maxLegendaryEnemies = 1;
 
         this.undiscoveredRareTreasures = 0;
-        this.maxRareTreasures = this.chance.range(4, 6);
+        this.maxRareTreasures = SharedChance.range(4, 6);
 
         this.undiscoveredEpicTreasures = 0;
-        this.maxEpicTreasures = this.chance.range(1, 2);
+        this.maxEpicTreasures = SharedChance.range(1, 2);
 
         this.undiscoveredLegendaryTreasures = 0;
         this.maxLegendaryTreasures = 1;
@@ -66,7 +65,8 @@ class Map
 
             if(isDataReady)
             {
-                this.events.push({type: "narrator-message", data: `Welcome to the ${this.biome.name}.`});
+                const welcomeMessage = new ChatMessage(ChatMessage.TYPES.SPECIAL, GameEntity.SPECIAL_ENTITIES.NARRATOR, `Welcome to the ${this.biome.name}.`);
+                GEQ.enqueue(new GameEvent(GameEvent.TYPES.MESSAGE, welcomeMessage.source, welcomeMessage));
 
                 this.texture = new GameTexture(`biomes/${this.biome.theme.spriteSheet}`);
 
@@ -109,43 +109,6 @@ class Map
         this.grid[room.row][room.col] = room.compress();
     }
 
-    getFeature(room)
-    {
-        // yeild if the room does not have a feature
-        if(!Feature.containsFeature(room)) { return null; }
-
-        const feature = this.biome.features.find(feature => feature.key == room.type);
-
-        // yield if the feature is not found
-        if(typeof feature === "undefined" || feature === null) { return null; }
-
-        return feature;
-    }
-
-    getEncounter(room)
-    {
-        // yeild if the room does not have an encounter
-        if(!Encounter.containsEncounter(room)) { return null; }
-
-        let encounters = [];
-
-        switch(room.type)
-        {
-            case Encounter.TYPES.ENEMY_COMMON: encounters = this.biome.commonEncounters; break;
-            case Encounter.TYPES.ENEMY_RARE: encounters = this.biome.rareEncounters; break;
-            case Encounter.TYPES.ENEMY_EPIC: encounters = this.biome.epicEncounters; break;
-            case Encounter.TYPES.ENEMY_LEGENDARY: encounters = this.biome.legendaryEncounters; break;
-            default: break;
-        }
-
-        const encounter = encounters.find(encounter => encounter.key == room.encounterKey);
-
-        // yield if the encounter is not found
-        if(typeof encounter === "undefined" || encounter === null) { return null; }
-
-        return encounter;
-    }
-
     exploreRoom(x, y)
     {
         const room = this.getRoom(x, y);
@@ -165,13 +128,13 @@ class Map
 
         let variant = 0; 
         
-        if(this.chance.range(0, 10) < 8)
+        if(SharedChance.range(0, 10) < 8)
         {
-            variant = (roomTypes.length > 0)? this.chance.range(0, roomTypes.length - 1): 0;
+            variant = (roomTypes.length > 0)? SharedChance.range(0, roomTypes.length - 1): 0;
         }
         else
         {
-            variant = (roomTypes.length > 1)? this.chance.range(0, 1): 0;
+            variant = (roomTypes.length > 1)? SharedChance.range(0, 1): 0;
         }
 
         let encounterKeys = [];
@@ -197,7 +160,7 @@ class Map
             default: break;
         }
 
-        const encounterKey = (encounterKeys.length > 0)? this.chance.pick(encounterKeys): 0;
+        const encounterKey = (encounterKeys.length > 0)? SharedChance.pick(encounterKeys): 0;
        
         room.status = 1; // 1 = explored
         room.variant = variant;
@@ -209,53 +172,26 @@ class Map
 
         this.updateRoom(room);
 
-        const events = [];
-        const loot = [];
-
         let encounter = Encounter.fromRoom(this.biome, room);
 
         if(encounter !== null && !encounter.isFaulted)
         {
-            const flavors = ["whooped", "walloped", "man-handled", "sucker-punched"];
-            const message = `You have ${this.chance.pick(flavors)} the ${encounter.getChatName()}!`;
+            // create an event to let the game engine know an encounter has been triggered
+            const event = new GameEvent(GameEvent.TYPES.ENCOUNTER, room, encounter);
 
-            events.push({type: "narrator-message", data: message});
-
-            const encounterLoot = this.biome.determineLoot(encounter, this.chance);
-            loot.push(...encounterLoot);
+            // add event to the global event queue
+            GEQ.enqueue(event);
         }
 
         const feature = Feature.fromRoom(this.biome, room);
 
-        if(feature !== null && feature.isLootable)
+        if(feature !== null)
         {
-            const featureLoot = this.biome.determineLoot(feature, this.chance);
-            loot.push(...featureLoot);
-        }
+            // create an event to let the game engine know a feature has been discovered
+            const event = new GameEvent(GameEvent.TYPES.DISCOVERY, room, feature);
 
-        for(const item of loot)
-        {
-            let flavor = "Nice!";
-            let tag = item.rarity.toUpperCase();
-
-            switch(tag)
-            {
-                case "COMMON": flavor = "Lame..."; break;
-                case "UNCOMMON": flavor = "Meh."; break;
-                case "RARE": flavor = "Nice! "; break;
-                case "EPIC": flavor = "Oh Snap..."; break;
-                case "LEGENDARY": flavor = "Holy Shit"; break;
-                default: flavor = "Huh?"; break;
-            }
-
-            const message = `${flavor} You looted [${tag}][${item.name}][/${tag}]!`;
-
-            events.push({type: "narrator-message", data: message});
-        }
-
-        if(feature !== null && feature.isExit)
-        {
-            events.push({type: "narrator-message", data: "[LEGENDARY]You reached the end! Go you![/LEGENDARY]"});
+            // add event to the global event queue
+            GEQ.enqueue(event);
         }
 
         return events;
@@ -325,7 +261,7 @@ class Map
 
     drawEncounter(room)
     {
-        const encounter = this.getEncounter(room);
+        const encounter = Encounter.fromRoom(this.biome, room);
 
         // yield if the encounter is not found
         if(encounter === null) { return; }
@@ -340,7 +276,7 @@ class Map
 
     drawFeature(room)
     {
-        const feature = this.getFeature(room);
+        const feature = Feature.fromRoom(this.biome, room);
 
         // yeild if the feature could not be found
         if(feature == null) { return; }

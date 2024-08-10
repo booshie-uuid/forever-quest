@@ -4,48 +4,131 @@ class Engine
 {
     constructor(release, chatboxID, displayID)
     {
+        // environment configuration
         this.release = release;
         this.releasePath = release + "/";
 
         GameData.setDataPath(this.releasePath + "data/");
         GameTexture.setTexturePath(this.releasePath + "textures/");
 
-        this.chat = new Chat(chatboxID);
-        this.isReady = this.chat.isReady;
+        // initialise shared controllers (singletons)
+        // GEQ = new GameEventQueue();
+        const sharedChance = new SharedChance(Math.random());
 
-        // error out if the chatbox is not ready
-        if(!this.chat.isReady) return alert("Error initialising chatbox. Something is seriously wrong.");
-                
+        // output controllers
+        this.chat = new Chat(chatboxID);               
         this.gfx = new GFX(displayID, 974, 680, this.error.bind(this));
 
-        // error out if the display is not ready
-        if(this.gfx.isFaulted) return this.error("Could not initialise games display.");
-
+        // input controllers and properties
         this.mouse = new Mouse(this.gfx.canvas, this.error.bind(this));
         this.mouse.onMouseChange = this.handleMouseChange.bind(this);
 
         this.mouseDown = false;
 
-        // error out if the mouse is not ready
-        if(!this.mouse.isReady) return this.error("Could not initialise mouse input.");
+        document.addEventListener("keydown", this.handleKeyPress.bind(this));
+        document.addEventListener("keyup", this.handleKeyRelease.bind(this));
 
-        this.chance = new SharedChance();
-        this.map = new Map(this.gfx, Math.random());
+        // key data controllers
+        this.map = new Map(this.gfx);
+
+        // key entities
+        this.activeEncounter = null;
 
         this.playerDirectionX = "none";
         this.playerDirectionX = 0;
         this.playerDirectionY = 0;
         this.playerLastMoved = Date.now();
 
-        document.addEventListener("keydown", this.handleKeyPress.bind(this));
-        document.addEventListener("keyup", this.handleKeyRelease.bind(this));
+        // welcome messages
+        const welcomes = [];
 
-        this.chat.addMessage("REALM", "Welcome to Forever Quest...", "system");
-        this.chat.addMessage("NARRATOR", "Click on the map and use WASD to move around.", "special");
+        welcomes.push("Welcome to Forever Quest...");
+        welcomes.push("Click on the map and use WASD to move around.");
 
+        for(const welcome of welcomes)
+        {
+            const message = new ChatMessage(ChatMessage.TYPES.SYSTEM, GameEntity.SPECIAL_ENTITIES.NARRATOR, welcome);
+
+            // add message to global event queue
+            GEQ.enqueue(new GameEvent(GameEvent.TYPES.MESSAGE, GameEntity.SPECIAL_ENTITIES.NARRATOR, message));
+        }
+
+        this.update();
+    }
+
+    update()
+    {
+        // report and yield if chat or graphics engine are faulted
+        if(!this.chat.isReady || this.gfx.isFaulted)
+        {
+            this.handleCatastrophicError();
+            return;
+        }
+
+        if(this.gfx.isReady)
+        {    
+            const mapEvents = this.map.update();
+
+            this.handleEvents(mapEvents);
+
+            const now = Date.now();
+
+            if(this.playerDirection != "none" && now - this.playerLastMoved > 180)
+            {
+                this.movePlayer();
+                this.playerLastMoved = now;
+            }
+        }
+
+        this.chat.update();
+
+        // handle any events that were handled by other controllers (e.g. chat)
+        this.handleEvents(GEQ.dequeueAll());
+        
         window.requestAnimationFrame(this.update.bind(this));
+    }
 
-        this.once = false;
+    handleEvents(events)
+    {
+        for(const event of events)
+        {
+            switch(event.type)
+            {
+                case GameEvent.TYPES.ERROR:
+                    this.handleError(event);
+                    break;
+
+                case GameEvent.TYPES.ENCOUNTER:
+                    this.handleEncounter(event);
+                    break;
+
+                case GameEvent.TYPES.DISCOVERY:
+                    this.handleDiscovery(event);
+                    break;
+
+                default:
+                    break;
+            }
+        }
+    }
+
+    handleEncounter(event)
+    {
+        const encounter = event.data;
+
+        if(encounter.isFaulted)
+        {
+            GEQ.enqueue(new GameEvent(GameEvent.TYPES.ERROR, GameEntity.SPECIAL_ENTITIES.ERROR, "We somehow ran into a faulty encounter! Perhaps the realm server is toast?"));
+            return;
+        }
+
+        this.activeEncounter = encounter;
+        
+        // send the player a message revealing the encounter
+        const revealMessage = new ChatMessage(ChatMessage.TYPES.SHOUT, GameEntity.SPECIAL_ENTITIES.NARRATOR, encounter.getRevealNarration());
+
+        // add reveal message to global event queue
+        GEQ.enqueue(new GameEvent(GameEvent.TYPES.MESSAGE, GameEntity.SPECIAL_ENTITIES.NARRATOR, revealMessage));
     }
 
     movePlayer()
@@ -87,9 +170,7 @@ class Engine
         if(directionY == -1 && !currentRoom.hasNorthDoor) return;
         if(directionY == 1 && !currentRoom.hasSouthDoor) return;
 
-        const explorationEvents = this.map.exploreRoom(x, y);
-
-        this.handleEvents(explorationEvents);
+        this.map.exploreRoom(x, y);
 
         this.map.currentCol = x;
         this.map.currentRow = y;
@@ -176,43 +257,24 @@ class Engine
         this.chat.addMessage("SYSTEM", message, "system");
     }
 
-    handleEvents(events)
+    handleError(event)
     {
-        // yeild if there are no events
-        if(typeof events === "undefined" || events === null || events.length == 0) { return; }
-
-        for(const event of events)
-        {
-            switch(event.type)
-            {
-                case "narrator-message":
-                    this.chat.addMessage("NARRATOR", event.data, "special");
-                    break;
-
-                default:
-                    break;
-            }
-        }
+        this.chat.addMessage(new ChatMessage(ChatMessage.TYPES.SHOUT, event.source, event.data));
     }
 
-    update()
+    handleCatastrophicError()
     {
-        if(this.gfx.isReady)
-        {    
-            const mapEvents = this.map.update();
-
-            this.handleEvents(mapEvents);
-
-            const now = Date.now();
-
-            if(this.playerDirection != "none" && now - this.playerLastMoved > 180)
-            {
-                this.movePlayer();
-                this.playerLastMoved = now;
-            }
+        // could not initialise chat
+        if(!this.chat.isReady)
+        {
+            alert("A catastrophic error occurred! Could not initialise chat. What have you done!?");
         }
-        
-        window.requestAnimationFrame(this.update.bind(this));
+
+        // could not initialise graphics engine
+        if(!this.gfx.isReady)
+        {
+            this.chat.addMessage(new ChatMessage(ChatMessage.TYPES.SHOUT, GameEntity.SPECIAL_ENTITIES.CLIENT, "A catastrophic error has occurred! Could not initialise the graphics engine. Are you running on a potato-based browser?"));
+        }
     }
 
 }

@@ -27,6 +27,7 @@ class Encounter
         this.type = type;
         this.encounterKey = encounterKey;
 
+        // load encounter data
         let encounters = [];
 
         switch(this.type)
@@ -40,10 +41,13 @@ class Encounter
 
         const encounter = encounters.find(encounter => encounter.key == this.encounterKey);
 
+        // key state properties
         this.isFaulted = (typeof encounter === "undefined" || encounter === null);
+        this.isResolved = false;
 
         if(this.isFaulted) { return; }
 
+        // map encounter data
         this.name = encounter.name;
         this.allegiance = encounter.allegiance;
         this.baseDisposition = encounter.baseDisposition;
@@ -53,9 +57,10 @@ class Encounter
         this.spriteY = encounter.spriteY;
         this.loot = encounter.loot;
         this.gaurenteedLoot = encounter.gaurenteedLoot;
+        this.revealNarration = (Array.isArray(encounter.revealNarration))? encounter.revealNarration: [];
     }
 
-    getChatName()
+    getDisplayName()
     {       
         let tag = "COMMON";
 
@@ -69,6 +74,13 @@ class Encounter
         }
 
         return `[${tag}][${this.name}][/${tag}]`;
+    }
+
+    getRevealNarration()
+    {
+        let narration = (this.revealNarration.length > 0)? SharedChance.pick(this.revealNarration).text: "You have encountered @NAME!";
+
+        return narration.replace("@NAME", Grammar.withIndefiniteArticle(this.getDisplayName()));
     }
 
 }

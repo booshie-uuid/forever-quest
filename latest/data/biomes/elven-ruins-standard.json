@@ -211,7 +211,11 @@
             "spriteX": 2,
             "spriteY": 104,
             "loot": [4,5,7,8],
-            "gaurenteedLoot": [2]
+            "gaurenteedLoot": [2],
+            "revealNarration": [
+                { "text": "Sweet Mother Nature! You have come face to face with @NAME!" },
+                { "text": "You have stumbled upon @NAME! You should probably run." }
+            ]
         }
     ],
 

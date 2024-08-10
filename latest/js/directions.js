@@ -20,10 +20,10 @@ class DIRECTIONS
         return [DIRECTIONS.NORTH, DIRECTIONS.EAST, DIRECTIONS.SOUTH, DIRECTIONS.WEST, DIRECTIONS.NORTH_EAST, DIRECTIONS.SOUTH_EAST, DIRECTIONS.SOUTH_WEST, DIRECTIONS.NORTH_WEST];
     }
 
-    static getRandomDirection(chance)
+    static getRandomDirection()
     {
         const directions = [DIRECTIONS.NORTH, DIRECTIONS.EAST, DIRECTIONS.SOUTH, DIRECTIONS.WEST];
-        const direction = chance.pick(directions);
+        const direction = SharedChance.pick(directions);
 
         return direction;
     }

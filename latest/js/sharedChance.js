@@ -5,20 +5,29 @@
  */
 class SharedChance
 {
+    static instance = undefined;
+
     constructor(seed = 0.1982)
     {
+        if (SharedChance.instance instanceof SharedChance)
+        {
+            return SharedChance.instance;
+        }
+        
         this.seed = seed;
+
+        SharedChance.instance = this;
     }
 
     /**
      * Generates a psuedo random number between 0 and 1 similar to Math.random().
      * @returns {number}
      */
-    random()
+    static random()
     {
-        this.generate();
+        SharedChance.generate();
 
-        return this.seed;
+        return SharedChance.instance.seed;
     }
 
     /**
@@ -26,7 +35,7 @@ class SharedChance
      * Implements the linear congruential generator algorithm.
      * @returns {void}
      */
-    generate()
+    static generate()
     {
         // magic numbers are a call back to Sinclair Z81
         const multiplier = 75;
@@ -34,7 +43,7 @@ class SharedChance
         const modulus = 65537;
         
         // linear congruential generator
-        this.seed = ((multiplier * this.seed * modulus + increment) % modulus) / modulus;
+        SharedChance.instance.seed = ((multiplier * SharedChance.instance.seed * modulus + increment) % modulus) / modulus;
     }
 
     /**
@@ -45,16 +54,16 @@ class SharedChance
      * @param {number} sides - The number of sides on each dice.
      * @returns {number} - A pseudo random number within the specified range.
      */
-    roll(dice, sides)
+    static roll(dice, sides)
     {
-        this.generate();
+        SharedChance.generate();
 
         // use latest seed to generate a pseudo random number
         // that is between the minimum and maximum possible rolls of the dice
         const min = dice;
         const max = dice * sides;
 
-        const result = Math.floor((max - min + 1) * this.seed) + min;
+        const result = Math.floor((max - min + 1) * SharedChance.instance.seed) + min;
 
         return result;
     }
@@ -64,11 +73,11 @@ class SharedChance
      * 
      * @returns {boolean} The result of the coin flip.
      */
-    flip()
+    static flip()
     {
-        this.generate();
+        SharedChance.generate();
 
-        return this.seed > 0.5;
+        return SharedChance.instance.seed > 0.5;
     }
 
     /**
@@ -77,11 +86,11 @@ class SharedChance
      * @param {*} max maximum value (inclusive)
      * @returns 
      */
-    range(min, max)
+    static range(min, max)
     {
-        this.generate();
+        SharedChance.generate();
 
-        return Math.floor((max - min + 1) * this.seed) + min;
+        return Math.floor((max - min + 1) * SharedChance.instance.seed) + min;
     }
 
     /**
@@ -91,7 +100,7 @@ class SharedChance
      * @param {*} max maximum value (inclusive)
      * @returns 
      */
-    biasedRange(min, max)
+    static biasedRange(min, max)
     {
         return Math.floor(Math.abs(this.random() - this.random()) * (1 + max - min) + min);
     }
@@ -101,7 +110,7 @@ class SharedChance
      * @param {*} array 
      * @returns 
      */
-    pick(array)
+    static pick(array)
     {
         // yeild if array is empty
         if(array === null || array.length === 0) { return null };
@@ -115,7 +124,7 @@ class SharedChance
      * @param {*} array 
      * @returns 
      */
-    biasedPick(array)
+    static biasedPick(array)
     {
         // yeild if array is empty
         if(array === null || array.length === 0) { return null };

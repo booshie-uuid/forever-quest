@@ -43,7 +43,7 @@ class Biome
         this.isFaulted = false;
     }
 
-    determineLoot(target, chance)
+    determineLoot(target)
     {
         // yeild if the target is invalid
         if(target === null) { return []; }
@@ -65,14 +65,14 @@ class Biome
             
             const potentialLoot = this.loot.filter(item => additionalLootKeys.includes(item.key) && item.rarity == rarity);
 
-            if(potentialLoot.length > 0) { additionalLoot.push(chance.pick(potentialLoot)); }
+            if(potentialLoot.length > 0) { additionalLoot.push(SharedChance.pick(potentialLoot)); }
 
         };
 
         let attempts = 0;
         while(additionalLoot.length < maxAdditionalLoot && attempts < 20)
         {
-            const roll = chance.roll(1, 20);
+            const roll = SharedChance.roll(1, 20);
 
             if(roll == 20) { awardItem("legendary"); }
             else if(roll >= 16) { awardItem("epic"); }

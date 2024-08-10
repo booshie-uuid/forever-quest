@@ -1,9 +1,8 @@
 class MapGenerator
 {
-    constructor(map, chance)
+    constructor(map)
     {
         this.map = map;
-        this.chance = chance;
     }
 
     initializeGrid()
@@ -46,7 +45,7 @@ class MapGenerator
         deadends = deadends.filter(room => room.type === Room.TYPES.DEADEND);
 
         // choose a deadend at random to serve as the spawn room
-        const spawnRoom = this.chance.pick(deadends);
+        const spawnRoom = SharedChance.pick(deadends);
 
         spawnRoom.type = Room.TYPES.SPAWN;
         this.map.updateRoom(spawnRoom);
@@ -77,7 +76,7 @@ class MapGenerator
             // pick a random deadend but with bias towards ones that are further from spawn
             // this works because the deadends are sorted by distance from the spawn room
             // and biasedRange() will return a number closer to the minimum value
-            const index = this.chance.biasedRange(0, deadends.length - 1);
+            const index = SharedChance.biasedRange(0, deadends.length - 1);
             const room = deadends[index];
 
             // remove the chosen deadend from the list of available deadends
@@ -140,13 +139,13 @@ class MapGenerator
     generateFoundation(rooms)
     {
         // choose a random room towards the top left of the map to start the foundation
-        const startX = this.chance.roll(0, 4);
-        const startY = this.chance.roll(0, 4);
+        const startX = SharedChance.roll(0, 4);
+        const startY = SharedChance.roll(0, 4);
         const startRoom = this.map.getRoom(startX, startY);
 
         // choose a random room towards the bottom right of the map to finish the foundation
-        const finishX = this.map.gridCols - 1 - this.chance.roll(0, 4);
-        const finishY = this.map.gridRows - 1 - this.chance.roll(0, 4);
+        const finishX = this.map.gridCols - 1 - SharedChance.roll(0, 4);
+        const finishY = this.map.gridRows - 1 - SharedChance.roll(0, 4);
         const finishRoom = this.map.getRoom(finishX, finishY);
         
         // generate a path between the start and finish rooms
@@ -172,7 +171,7 @@ class MapGenerator
 
         // we will randomly pick a heading (horizontal or vertical) every few steps
         // to ensure the path we create is more interesting
-        let isMovingHorizontally = this.chance.flip();
+        let isMovingHorizontally = SharedChance.flip();
         let stepsSinceDirectionChange = 0;
 
         while(currentCol !== destination.col || currentRow !== destination.row)
@@ -192,7 +191,7 @@ class MapGenerator
             
             if(stepsSinceDirectionChange > 3 && distance > 3)
             {
-                isMovingHorizontally = this.chance.flip();
+                isMovingHorizontally = SharedChance.flip();
                 stepsSinceDirectionChange = 0;
             }
         }
@@ -208,15 +207,15 @@ class MapGenerator
 
     generateCorridors(rooms)
     {
-        const targetCorridors = this.chance.range(50, 60);
+        const targetCorridors = SharedChance.range(50, 60);
         let actualCorridors = 0;
         let attempts = 0;
 
         while(actualCorridors < targetCorridors && attempts < 1000)
         {
-            const startRoom = rooms[this.chance.roll(1, rooms.length) - 1];
-            const direction = DIRECTIONS.getRandomDirection(this.chance);
-            const maxLength = this.chance.range(6, 16);
+            const startRoom = rooms[SharedChance.roll(1, rooms.length) - 1];
+            const direction = DIRECTIONS.getRandomDirection(SharedChance);
+            const maxLength = SharedChance.range(6, 16);
 
             const corridor = this.generateCorridor(startRoom, maxLength, direction, []);
 

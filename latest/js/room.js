@@ -1,4 +1,4 @@
-class Room
+class Room extends GameEntity
 {
     static TYPES = {
         EMPTY: 0,
@@ -22,6 +22,8 @@ class Room
 
     constructor(map, data)
     {
+        super(GameEntity.DESIGNATIONS.ROOM, `Room ${data[1]}, ${data[2]}`);
+
         this.map = map;
 
         this.status = data[0];
@@ -42,8 +44,8 @@ class Room
 
     compress()
     {
-        // get all fields except map, drawX, and drawY
-        const { map, drawX, drawY, ...rest } = this;
+        // get all data fields (excluding inherited and calculated fields)
+        const { designation, name, map, drawX, drawY, ...rest } = this;
     
         return Object.values(rest);
     }

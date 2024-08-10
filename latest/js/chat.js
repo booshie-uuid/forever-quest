@@ -10,6 +10,27 @@ class Chat
     {
         if(!this.isReady) return;
 
+        this.handleEvents();
+    }
+
+    handleEvents()
+    {
+        this.handleMessages();
+    }
+
+    handleMessages()
+    {
+        const events = GEQ.dequeue([GameEvent.TYPES.MESSAGE]);
+
+        // yield if no message events were in the queue
+        if(events === null || events.length === 0) { return; }
+
+        for(const event of events)
+        {
+            const message = event.data;
+            this.addMessage(event.data);
+        }
+
         this.chatbox.scrollTop = this.chatbox.scrollHeight;
 
         if(this.chatbox.children.length > 50)
@@ -38,22 +59,24 @@ class Chat
         return colorMappings[messageType] || colorMappings["public"];
     }
 
-    addMessage(from, message, type = "public")
+    addMessage(message)
     {
-        if(!this.isReady) return;
+        if(!this.isReady || !(message instanceof ChatMessage)) return;
 
-        message = message.replace("[COMMON]", `</span><span style="color:${this.getMessageColor("common")}">`).replace("[/COMMON]", "</span><span>");
-        message = message.replace("[UNCOMMON]", `</span><span style="color:${this.getMessageColor("uncommon")}">`).replace("[/UNCOMMON]", "</span><span>");
-        message = message.replace("[RARE]", `</span><span style="color:${this.getMessageColor("rare")}">`).replace("[/RARE]", "</span><span>");
-        message = message.replace("[EPIC]", `</span><span style="color:${this.getMessageColor("epic")}">`).replace("[/EPIC]", "</span><span>");
-        message = message.replace("[LEGENDARY]", `</span><span style="color:${this.getMessageColor("legendary")}">`).replace("[/LEGENDARY]", "</span><span>");
+        let content = message.content;
 
-        const envelopeElement = document.createElement("p");
+        content = content.replace("[COMMON]", `</span><span style="color:${this.getMessageColor("common")}">`).replace("[/COMMON]", "</span><span>");
+        content = content.replace("[UNCOMMON]", `</span><span style="color:${this.getMessageColor("uncommon")}">`).replace("[/UNCOMMON]", "</span><span>");
+        content = content.replace("[RARE]", `</span><span style="color:${this.getMessageColor("rare")}">`).replace("[/RARE]", "</span><span>");
+        content = content.replace("[EPIC]", `</span><span style="color:${this.getMessageColor("epic")}">`).replace("[/EPIC]", "</span><span>");
+        content = content.replace("[LEGENDARY]", `</span><span style="color:${this.getMessageColor("legendary")}">`).replace("[/LEGENDARY]", "</span><span>");
 
-        envelopeElement.style.color = this.getMessageColor(type);
-        envelopeElement.innerHTML = `<span>[${from}]:\xa0 ${message}</span>`;
+        const line = document.createElement("p");
 
-        this.chatbox.appendChild(envelopeElement);
+        line.style.color = message.type;
+        line.innerHTML = `<span>[${message.source.name}]:\xa0 ${content}</span>`;
+
+        this.chatbox.appendChild(line);
 
         this.update();
     }
