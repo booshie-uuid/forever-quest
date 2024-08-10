@@ -15,6 +15,10 @@ class Engine
         // GEQ = new GameEventQueue();
         const sharedChance = new SharedChance(Math.random());
 
+        // key state properties
+        this.isFaulted = false;
+        this.isReady = false;
+
         // output controllers
         this.chat = new Chat(chatboxID);               
         this.gfx = new GFX(displayID, 974, 680, this.error.bind(this));
@@ -39,20 +43,6 @@ class Engine
         this.playerDirectionY = 0;
         this.playerLastMoved = Date.now();
 
-        // welcome messages
-        const welcomes = [];
-
-        welcomes.push("Welcome to Forever Quest...");
-        welcomes.push("Click on the map and use WASD to move around.");
-
-        for(const welcome of welcomes)
-        {
-            const message = new ChatMessage(ChatMessage.TYPES.SYSTEM, GameEntity.SPECIAL_ENTITIES.NARRATOR, welcome);
-
-            // add message to global event queue
-            GEQ.enqueue(new GameEvent(GameEvent.TYPES.MESSAGE, GameEntity.SPECIAL_ENTITIES.NARRATOR, message));
-        }
-
         this.update();
     }
 
@@ -61,15 +51,25 @@ class Engine
         // report and yield if chat or graphics engine are faulted
         if(!this.chat.isReady || this.gfx.isFaulted)
         {
+            this.isFaulted = true;
             this.handleCatastrophicError();
             return;
         }
 
+        // perform any once-off tasks if this is our first update
+        if(!this.isReady)
+        {
+            // we wouldn't have got this far if key dependencies were faulted
+            // so set the game engine to ready
+            this.isReady = true;
+
+            // welcome the player to the game
+            this.welcomePlayer();
+        }
+
         if(this.gfx.isReady)
         {    
-            const mapEvents = this.map.update();
-
-            this.handleEvents(mapEvents);
+            this.map.update();
 
             const now = Date.now();
 
@@ -86,6 +86,22 @@ class Engine
         this.handleEvents(GEQ.dequeueAll());
         
         window.requestAnimationFrame(this.update.bind(this));
+    }
+
+    welcomePlayer()
+    {
+        const welcomes = [];
+
+        welcomes.push("Welcome to Forever Quest...");
+        welcomes.push("Click on the map and use WASD to move around.");
+
+        for(const welcome of welcomes)
+        {
+            const message = new ChatMessage(ChatMessage.TYPES.SYSTEM, GameEntity.SPECIAL_ENTITIES.NARRATOR, welcome);
+
+            // add message to global event queue
+            GEQ.enqueue(new GameEvent(GameEvent.TYPES.MESSAGE, GameEntity.SPECIAL_ENTITIES.NARRATOR, message));
+        }
     }
 
     handleEvents(events)
@@ -129,6 +145,11 @@ class Engine
 
         // add reveal message to global event queue
         GEQ.enqueue(new GameEvent(GameEvent.TYPES.MESSAGE, GameEntity.SPECIAL_ENTITIES.NARRATOR, revealMessage));
+    }
+
+    handleDiscovery(event)
+    {
+        const feature = event.data;
     }
 
     movePlayer()

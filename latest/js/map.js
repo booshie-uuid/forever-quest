@@ -51,8 +51,6 @@ class Map
 
     update()
     {
-        this.events = [];
-
         if(this.state == Map.STATES.MAP_READY)
         {
             // draw the map
@@ -88,8 +86,6 @@ class Map
             // populate the grid if it has not already been done
             this.generator.generateRooms();
         }
-
-        return this.events;
     }
 
     getCurrentRoom()
@@ -193,8 +189,6 @@ class Map
             // add event to the global event queue
             GEQ.enqueue(event);
         }
-
-        return events;
     }
 
     draw()
