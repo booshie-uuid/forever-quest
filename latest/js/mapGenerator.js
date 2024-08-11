@@ -50,6 +50,8 @@ class MapGenerator
         spawnRoom.type = Room.TYPES.SPAWN;
         this.map.updateRoom(spawnRoom);
 
+        this.map.spawnRoom = spawnRoom;
+
         this.map.currentCol = spawnRoom.col;
         this.map.currentRow = spawnRoom.row;
 
@@ -134,9 +136,6 @@ class MapGenerator
 
         // handle any debug requirements
         this.handleDebug();
-
-        // set the map state to ready
-        this.map.state = Map.STATES.MAP_READY;
     }
 
     generateFoundation(rooms)

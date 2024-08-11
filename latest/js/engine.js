@@ -27,10 +27,9 @@ class Engine
         this.mouse = new Mouse(this.gfx.canvas, this.error.bind(this));
         this.mouse.onMouseChange = this.handleMouseChange.bind(this);
 
-        this.mouseDown = false;
+        this.keyboard = new Keyboard(this.handleKeyboardInput.bind(this));
 
-        document.addEventListener("keydown", this.handleKeyPress.bind(this));
-        document.addEventListener("keyup", this.handleKeyRelease.bind(this));
+        this.mouseDown = false;
 
         // key data controllers
         this.map = new Map(this.gfx);
@@ -38,6 +37,8 @@ class Engine
         this.path = null;
 
         // key entities
+        this.player = new Player("Player", this.gfx);
+
         this.activeEncounter = null;
 
         this.movementKeyDown = false;
@@ -74,21 +75,7 @@ class Engine
         if(this.gfx.isReady)
         {    
             this.map.update();
-
-            const now = Date.now();
-
-            if(this.playerDirection != "none" && now - this.playerLastMoved > 180)
-            {
-                this.movePlayer();
-                this.playerLastMoved = now;
-            } 
-            else if(now - this.playerLastMoved > 180)
-            {
-                this.movePlayerOnPath();
-                this.playerLastMoved = now;
-            }
-
-            this.drawPath();
+            this.player.update();
         }
 
         this.chat.update();
@@ -115,6 +102,15 @@ class Engine
         }
     }
 
+    handleKeyboardInput(key, isKeyDown)
+    {
+        let wasIntercepted = false;
+
+        wasIntercepted = this.player.handleKeyboardInput(key, isKeyDown);
+
+        return wasIntercepted;
+    }
+
     handleEvents(events)
     {
         for(const event of events)
@@ -129,6 +125,10 @@ class Engine
                     this.handleDiagnostic(event);
                     break;
 
+                case GameEvent.TYPES.MAP:
+                    this.handleMapEvent(event);
+                    break;
+
                 case GameEvent.TYPES.ENCOUNTER:
                     this.handleEncounter(event);
                     break;
@@ -140,6 +140,16 @@ class Engine
                 default:
                     break;
             }
+        }
+    }
+
+    handleMapEvent(event)
+    {
+        const mapState = event.data;
+
+        if(mapState == Map.STATES.MAP_READY)
+        {
+            this.player.setMap(this.map);
         }
     }
 
@@ -173,142 +183,6 @@ class Engine
         discoverable.triggerRevealNarration();
     }
 
-    movePlayerOnPath()
-    {
-        if(this.path === null || this.path.length == 0) return;
-
-        const room = this.path.pop().room;
-
-        this.map.currentCol = room.col;
-        this.map.currentRow = room.row;
-
-        this.map.exploreRoom(room.col, room.row);
-    }
-
-    movePlayer()
-    {
-        let directionX = 0;
-        let directionY = 0;
-
-        switch(this.playerDirection)
-        {
-            case "up":
-                directionY = -1;
-                break;
-
-            case "down":
-                directionY = 1;
-                break;
-
-            case "left":
-                directionX = -1;
-                break;
-
-            case "right":
-                directionX = 1;
-                break;
-
-            default:
-                break;
-        }
-
-        const currentRoom = this.map.getCurrentRoom();
-
-        const x = this.map.currentCol + directionX;
-        const y = this.map.currentRow + directionY;
-
-        if(x < 0 || x >= 28 || y < 0 || y >= 18) return;
-
-        if(directionX == -1 && !currentRoom.hasWestDoor) return;
-        if(directionX == 1 && !currentRoom.hasEastDoor) return;
-        if(directionY == -1 && !currentRoom.hasNorthDoor) return;
-        if(directionY == 1 && !currentRoom.hasSouthDoor) return;
-
-        this.map.exploreRoom(x, y);
-
-        this.map.currentCol = x;
-        this.map.currentRow = y;
-    }
-
-    handleKeyRelease(event)
-    {
-        const key = event.key.toLowerCase();
-
-        switch (key)
-        {
-            case "w":
-            case "arrowup":
-                this.playerDirection = (this.playerDirection == "up") ? "none" : this.playerDirection;
-                break;
-
-            case "a":
-            case "arrowleft":
-                this.playerDirection = (this.playerDirection == "left") ? "none" : this.playerDirection;
-                break;
-
-            case "s":
-            case "arrowdown":
-                this.playerDirection = (this.playerDirection == "down") ? "none" : this.playerDirection;
-                break;
-
-            case "d":
-            case "arrowright":
-                this.playerDirection = (this.playerDirection == "right") ? "none" : this.playerDirection;
-                break;
-
-            default:
-                break;
-        }
-
-        if (["w", "a", "s", "d", "arrowup", "arrowleft", "arrowdown", "arrowright"].includes(key))
-        {
-            this.movementKeyDown = false;
-
-            event.preventDefault();
-        }
-    }
-
-    handleKeyPress(event)
-    {
-        const key = event.key.toLowerCase();
-
-        switch (key.toLowerCase())
-        {
-            case "w":
-            case "arrowup":
-            this.playerDirection = "up";
-            break;
-
-            case "a":
-            case "arrowleft":
-            this.playerDirection = "left";
-            break;
-
-            case "s":
-            case "arrowdown":
-            this.playerDirection = "down";
-            break;
-
-            case "d":
-            case "arrowright":
-            this.playerDirection = "right";
-            break;
-
-            default:
-            break;
-        }
-
-        if (["w", "a", "s", "d", "arrowup", "arrowleft", "arrowdown", "arrowright"].includes(key))
-        {
-            // ensure speedy response if new key press
-            if(!this.movementKeyDown) { this.playerLastMoved = Date.now() - 185; }
-
-            this.movementKeyDown = true;
-            this.path = null;
-            event.preventDefault();            
-        }
-    }
-
     handleMouseChange()
     {
         let wasIntercepted = false;
@@ -324,46 +198,11 @@ class Engine
 
             if(room !== null)
             {
-                this.setDestination(room);
+                this.player.setDestination(room);
             }
         }
 
         this.mouseDown = this.mouse.isDown;
-    }
-
-    setDestination(room)
-    {
-        // yield if the room is empty or unexplored
-        if(room.type = Room.TYPES.EMPTY || room.status == 0) { return; }
-
-        const startingRoom = this.map.getCurrentRoom();
-        const finishingRoom = room;
-
-        this.path = this.map.pathFinder.calculatePath(startingRoom, finishingRoom);
-        this.path.pop();
-    }
-
-    drawPath()
-    {
-        if(this.path !== null)
-        {
-            this.gfx.context.strokeStyle = "#FF0000";
-            this.gfx.context.lineWidth = 2;
-
-            this.gfx.context.beginPath();
-
-            for(let i = 0; i < this.path.length; i++)
-            {
-                const room = this.path[i].room;
-
-                const drawX = room.drawX + this.map.renderer.drawOffsetX;
-                const drawY = room.drawY + this.map.renderer.drawOffsetY;
-
-                this.gfx.drawRectangleOutline(drawX, drawY, this.map.renderer.outerDrawSize, this.map.renderer.outerDrawSize, "#fab40b", 2, [4, 5]);
-            }
-
-            this.gfx.context.stroke();
-        }
     }
 
     error(message)

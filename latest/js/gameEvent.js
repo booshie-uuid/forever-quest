@@ -7,9 +7,10 @@ class GameEvent
         DIAGNOSTIC: 3,
         SPECIAL: 4,
         MESSAGE: 5,
-        ACTION: 6,
-        ENCOUNTER: 7,
-        DISCOVERY: 8
+        MAP: 6,
+        ACTION: 7,
+        ENCOUNTER: 8,
+        DISCOVERY: 9
     };
 
     static getSourceDisplayName(source)

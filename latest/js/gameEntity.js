@@ -18,7 +18,8 @@ class GameEntity
         ERROR: new GameEntity(GameEntity.DESIGNATIONS.SYSTEM, "ERROR"),
         WARNING: new GameEntity(GameEntity.DESIGNATIONS.SYSTEM, "WARNING"),
         DIAGNOSTIC: new GameEntity(GameEntity.DESIGNATIONS.SYSTEM, "DIAGNOSTIC"),
-        NARRATOR: new GameEntity(GameEntity.DESIGNATIONS.SPECIAL, "NARRATOR")
+        NARRATOR: new GameEntity(GameEntity.DESIGNATIONS.SPECIAL, "NARRATOR"),
+        MAP: new GameEntity(GameEntity.DESIGNATIONS.SPECIAL, "MAP")
     };
 
     constructor(designation, name)

@@ -31,7 +31,7 @@ class Room extends GameEntity
 
         this.map = map;
 
-        const [col, row, status, type, variant, rarity, childKey, hasNorthDoor, hasEastDoor, hasSouthDoor, hasWestDoor] = data;
+        const [col, row, status, type, variant, rarity, childKey] = data;
 
         this.col = (typeof col !== "undefined")? col: 0;
         this.row = (typeof row !== "undefined")? row: 0;
@@ -40,11 +40,6 @@ class Room extends GameEntity
         this.variant = (typeof variant !== "undefined")? variant: 0;
         this.rarity = (typeof rarity !== "undefined")? rarity: 0;
         this.childKey = (typeof childKey !== "undefined")? childKey: null;
-
-        this.hasNorthDoor = (typeof hasNorthDoor !== "undefined")? hasNorthDoor == 1: false;
-        this.hasEastDoor = (typeof hasEastDoor !== "undefined")? hasEastDoor == 1: false;
-        this.hasSouthDoor = (typeof hasSouthDoor !== "undefined")? hasSouthDoor == 1: false;
-        this.hasWestDoor = (typeof hasWestDoor !== "undefined")? hasWestDoor == 1: false;
 
         this.drawX = (this.col * 38);
         this.drawY = (this.row * 38);

@@ -1,5 +1,6 @@
 class DIRECTIONS
 {
+    static NONE = "none";
     static NORTH = "north";
     static EAST = "east";
     static SOUTH = "south";

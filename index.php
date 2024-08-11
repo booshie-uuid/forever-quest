@@ -40,6 +40,7 @@
     <script src="<?= $ENV->release ?>/js/gameEventQueue.js"></script>
     <script src="<?= $ENV->release ?>/js/gfx.js"></script>
     <script src="<?= $ENV->release ?>/js/mouse.js"></script>
+    <script src="<?= $ENV->release ?>/js/keyboard.js"></script>
 
     <script src="<?= $ENV->release ?>/js/directions.js"></script>
     <script src="<?= $ENV->release ?>/js/biome.js"></script>
@@ -54,6 +55,7 @@
     <script src="<?= $ENV->release ?>/js/chatMessage.js"></script>
     <script src="<?= $ENV->release ?>/js/chat.js"></script>
     <script src="<?= $ENV->release ?>/js/engine.js"></script>
+    <script src="<?= $ENV->release ?>/js/player.js"></script>
 
 </head>
 <body>

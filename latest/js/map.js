@@ -24,11 +24,13 @@ class Map
         // map grid and grid properties
         this.grid = null;
 
-        this.gridRows = 15;
         this.gridCols = 25;
+        this.gridRows = 15;
         
         this.currentCol = -1;
         this.currentRow = -1;
+
+        this.spawnRoom = null;
 
         // encounter and discoverable properties
         this.undefeatedRareEnemies = 0;
@@ -89,6 +91,12 @@ class Map
         {
             // populate the grid if it has not already been done
             this.generator.generateRooms();
+
+            // set the map state to ready
+            this.state = Map.STATES.MAP_READY;
+
+            // raise an event to let the game know the map is ready
+            GEQ.enqueue(new GameEvent(GameEvent.TYPES.MAP, GameEntity.SPECIAL_ENTITIES.MAP, this.state));
         }
     }
 
@@ -99,7 +107,7 @@ class Map
 
     getRoom(x, y)
     {
-        if(x < 0 || x >= this.gridCols || y < 0 || y >= this.gridRows) return null;
+        if(x < 0 || x >= this.gridCols || y < 0 || y >= this.gridRows) { return null; }
 
         return new Room(this, this.grid[y][x]);
     }
@@ -153,11 +161,6 @@ class Map
         room.status = 2; // 2 = explored
         room.variant = variant;
         room.childKey = childKey;
-
-        room.hasNorthDoor = room.isConnected(DIRECTIONS.NORTH);
-        room.hasEastDoor = room.isConnected(DIRECTIONS.EAST);
-        room.hasSouthDoor = room.isConnected(DIRECTIONS.SOUTH);
-        room.hasWestDoor = room.isConnected(DIRECTIONS.WEST);
 
         this.updateRoom(room);
 

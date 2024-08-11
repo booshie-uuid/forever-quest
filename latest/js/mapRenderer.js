@@ -33,8 +33,7 @@ class MapRenderer
                 this.drawRoom(room);
             }
         }
-
-        this.drawHighlights();
+        
         this.drawDebugHighlights();
     }
 
@@ -127,16 +126,6 @@ class MapRenderer
         const drawY = room.drawY + this.drawOffsetY + 1;
 
         this.gfx.drawSprite(this.texture, spriteX, spriteY, drawX, drawY, this.innerDrawSize, this.innerDrawSize);
-    }
-
-    drawHighlights()
-    {
-        const w = this.outerDrawSize;
-        const h = this.outerDrawSize;
-
-        const currentRoom = this.map.getCurrentRoom();
-
-        this.gfx.drawRectangleOutline((currentRoom.drawX + this.drawOffsetX), (currentRoom.drawY + this.drawOffsetY), this.outerDrawSize, this.outerDrawSize, "#fab40b", 2);
     }
 
     drawDebugHighlights()
