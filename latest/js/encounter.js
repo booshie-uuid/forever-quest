@@ -1,20 +1,20 @@
 class Encounter extends Lootable
 {
-    static containsEncounter(room)
+    static containsEncounter(tile)
     {
-        return room.type == Room.TYPES.ENCOUNTER;
+        return tile.type == MapTile.TYPES.ENCOUNTER;
     }
 
-    static getRandomKey(biome, room)
+    static getRandomKey(biome, tile)
     {
         let encounters = [];
 
-        switch(room.rarity)
+        switch(tile.rarity)
         {
-            case Room.RARITY.COMMON: encounters = biome.commonEncounters; break;
-            case Room.RARITY.RARE: encounters = biome.rareEncounters; break;
-            case Room.RARITY.EPIC: encounters = biome.epicEncounters; break;
-            case Room.RARITY.LEGENDARY: encounters = biome.legendaryEncounters; break;
+            case MapTile.RARITY.COMMON: encounters = biome.commonEncounters; break;
+            case MapTile.RARITY.RARE: encounters = biome.rareEncounters; break;
+            case MapTile.RARITY.EPIC: encounters = biome.epicEncounters; break;
+            case MapTile.RARITY.LEGENDARY: encounters = biome.legendaryEncounters; break;
             default: break;
         }
 
@@ -23,12 +23,12 @@ class Encounter extends Lootable
         return SharedChance.pick(encounters).key;
     }
 
-    static fromRoom(biome, room)
+    static fromMapTile(biome, tile)
     {
-        // yeild if the room does not have an encounter
-        if(!Encounter.containsEncounter(room)) { return null; }
+        // yeild if the tile does not have an encounter
+        if(!Encounter.containsEncounter(tile)) { return null; }
 
-        return new Encounter(biome, room.rarity, room.childKey);
+        return new Encounter(biome, tile.rarity, tile.childKey);
     }
 
     constructor(biome, rarity, encounterKey)
@@ -38,10 +38,10 @@ class Encounter extends Lootable
 
         switch(rarity)
         {
-            case Room.RARITY.COMMON: encounters = biome.commonEncounters; break;
-            case Room.RARITY.RARE: encounters = biome.rareEncounters; break;
-            case Room.RARITY.EPIC: encounters = biome.epicEncounters; break;
-            case Room.RARITY.LEGENDARY: encounters = biome.legendaryEncounters; break;
+            case MapTile.RARITY.COMMON: encounters = biome.commonEncounters; break;
+            case MapTile.RARITY.RARE: encounters = biome.rareEncounters; break;
+            case MapTile.RARITY.EPIC: encounters = biome.epicEncounters; break;
+            case MapTile.RARITY.LEGENDARY: encounters = biome.legendaryEncounters; break;
             default: break;
         }
 
@@ -87,10 +87,10 @@ class Encounter extends Lootable
 
         switch(this.rarity)
         {
-            case Room.RARITY.UNCOMMON: return "UNCOMMON";
-            case Room.RARITY.RARE: tag = "RARE"; break;
-            case Room.RARITY.EPIC: tag = "EPIC"; break;
-            case Room.RARITY.LEGENDARY: tag = "LEGENDARY"; break;
+            case MapTile.RARITY.UNCOMMON: return "UNCOMMON";
+            case MapTile.RARITY.RARE: tag = "RARE"; break;
+            case MapTile.RARITY.EPIC: tag = "EPIC"; break;
+            case MapTile.RARITY.LEGENDARY: tag = "LEGENDARY"; break;
             default: tag = "COMMON"; break;
         }
 

@@ -1,25 +1,25 @@
 class Discoverable extends Lootable
 {
-    static containsDiscoverable(room)
+    static containsDiscoverable(tile)
     {
-        return room.type == Room.TYPES.DISCOVERABLE;
+        return tile.type == MapTile.TYPES.DISCOVERABLE;
     }
 
-    static getRandomKey(biome, room)
+    static getRandomKey(biome, tile)
     {
-        let discoverables = biome.discoverables.filter(discoverable => discoverable.rarity == room.rarity);
+        let discoverables = biome.discoverables.filter(discoverable => discoverable.rarity == tile.rarity);
 
         if(typeof discoverables === "undefined" || discoverables === null || discoverables.length == 0) { return null; }
 
         return SharedChance.pick(discoverables).key;
     }
 
-    static fromRoom(biome, room)
+    static fromMapTile(biome, tile)
     {
-        // yeild if the room does not have an encounter
-        if(!Discoverable.containsDiscoverable(room)) { return null; }
+        // yeild if the tile does not have an encounter
+        if(!Discoverable.containsDiscoverable(tile)) { return null; }
 
-        return new Discoverable(biome, room.rarity, room.childKey);
+        return new Discoverable(biome, tile.rarity, tile.childKey);
     }
 
     constructor(biome, rarity, discoverableKey)
@@ -53,11 +53,11 @@ class Discoverable extends Lootable
 
         switch(this.rarity)
         {
-            case Room.RARITY.UNCOMMON: return "UNCOMMON";
-            case Room.RARITY.RARE: tag = "RARE"; break;
-            case Room.RARITY.EPIC: tag = "EPIC"; break;
-            case Room.RARITY.LEGENDARY: tag = "LEGENDARY"; break;
-            case Room.RARITY.SPECIAL: tag = "SPECIAL"; break;
+            case MapTile.RARITY.UNCOMMON: return "UNCOMMON";
+            case MapTile.RARITY.RARE: tag = "RARE"; break;
+            case MapTile.RARITY.EPIC: tag = "EPIC"; break;
+            case MapTile.RARITY.LEGENDARY: tag = "LEGENDARY"; break;
+            case MapTile.RARITY.SPECIAL: tag = "SPECIAL"; break;
             default: tag = "COMMON"; break;
         }
 

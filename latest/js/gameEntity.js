@@ -5,7 +5,7 @@ class GameEntity
         SYSTEM: "system",
         ADMIN: "admin",
         SPECIAL: "special",
-        ROOM: "room",
+        ROOM: "tile",
         CONTAINER: "container",
         PLAYER: "player",
         NPC: "npc",

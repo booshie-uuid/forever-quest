@@ -22,34 +22,43 @@ class Player extends GameEntity
     {
         this.map = map;
 
-        this.col = this.map.spawnRoom.col;
-        this.row = this.map.spawnRoom.row;
+        this.col = this.map.spawnMapTile.col;
+        this.row = this.map.spawnMapTile.row;
     }
 
     update()
     {
+        // yield if the player is not assigned to a map
+        if(this.map === null) { return; }
+
         this.moveManually();
         this.moveOnPath();
+
+        this.map.currentCol = this.col;
+        this.map.currentRow = this.row;
+        
+        this.map.renderer.calcDrawOffsetX(this.col, this.row);
+
         this.draw();
     }
 
-    getRoom()
+    getTile()
     {
-        return this.map.getRoom(this.col, this.row);
+        return this.map.getTile(this.col, this.row);
     }
 
-    setDestination(room)
+    setDestination(tile)
     {
         // yield if the player is not assigned to a map
         if(this.map === null) { return; }
 
-        // yield if the room is empty or unexplored
-        if(room.type = Room.TYPES.EMPTY || room.status == 0) { return; }
+        // yield if the tile is empty or unexplored
+        if(tile.type = MapTile.TYPES.EMPTY || tile.status == 0) { return; }
 
-        const startingRoom = this.getRoom();
-        const finishingRoom = room;
+        const startingMapTile = this.getTile();
+        const finishingMapTile = tile;
 
-        this.path = this.map.pathFinder.calculatePath(startingRoom, finishingRoom);
+        this.path = this.map.pathFinder.calculatePath(startingMapTile, finishingMapTile);
         this.path.pop();
     }
 
@@ -64,18 +73,19 @@ class Player extends GameEntity
 
         const delta = DIRECTIONS.getDirectionDeltas(this.moveDirection);
 
-        const room = this.getRoom();
+        const tile = this.getTile();
 
-        // yield if the player is not located in a valid room
-        if(room === null) { return; }
+        // yield if the player is not located in a valid tile
+        if(tile === null) { return; }
 
-        const newCol = room.col + delta.col;
-        const newRow = room.row + delta.row;
+        const newCol = tile.col + delta.col;
+        const newRow = tile.row + delta.row;
 
-        const newRoom = this.map.getRoom(newCol, newRow);
+        const newMapTile = this.map.getTile(newCol, newRow);
 
-        // yield if the new location is empty or otherwise not a valid room
-        if(newRoom === null || newRoom.type == Room.TYPES.EMPTY) { return; }
+        // yield if the new location is empty or otherwise not a valid tile
+        if(newMapTile === null) { return; }
+        //if(newMapTile === null || newMapTile.type == MapTile.TYPES.EMPTY) { return; }
 
         // update the players location
         this.col = newCol;
@@ -84,7 +94,7 @@ class Player extends GameEntity
         this.lastMoved = Date.now();
 
         // explore the new location
-        this.map.exploreRoom(newCol, newRow);
+        this.map.exploreMapTile(newCol, newRow);
     }
 
     moveOnPath()
@@ -98,12 +108,12 @@ class Player extends GameEntity
         // yield if the player has moved to recently
         if(Date.now() - this.lastMoved < this.movementDelay) { return; }
 
-        const room = this.path.pop().room;
+        const tile = this.path.pop().tile;
 
-        this.col = room.col;
-        this.row = room.row;
+        this.col = tile.col;
+        this.row = tile.row;
 
-        this.map.exploreRoom(room.col, room.row);
+        this.map.exploreMapTile(tile.col, tile.row);
 
         this.lastMoved = Date.now();
     }
@@ -225,13 +235,13 @@ class Player extends GameEntity
         this.drawPathHighlghts();
 
         // highlight current location
-        const room = this.map.getRoom(this.col, this.row);
+        const tile = this.map.getTile(this.col, this.row);
 
-        // yield if the player is not located in a valid room
-        if(room === null) { return; }
+        // yield if the player is not located in a valid tile
+        if(tile === null) { return; }
 
-        const drawX = room.drawX + this.map.renderer.drawOffsetX;
-        const drawY = room.drawY + this.map.renderer.drawOffsetY;
+        const drawX = tile.drawX + this.map.renderer.drawOffsetX;
+        const drawY = tile.drawY + this.map.renderer.drawOffsetY;
         const drawSize = this.map.renderer.outerDrawSize;
 
         this.gfx.drawRectangleOutline(drawX, drawY, drawSize, drawSize, "#fab40b", 2);
@@ -248,10 +258,10 @@ class Player extends GameEntity
 
             for(let i = 0; i < this.path.length; i++)
             {
-                const room = this.path[i].room;
+                const tile = this.path[i].tile;
 
-                const drawX = room.drawX + this.map.renderer.drawOffsetX;
-                const drawY = room.drawY + this.map.renderer.drawOffsetY;
+                const drawX = tile.drawX + this.map.renderer.drawOffsetX;
+                const drawY = tile.drawY + this.map.renderer.drawOffsetY;
                 const drawSize = this.map.renderer.outerDrawSize;
 
                 this.gfx.drawRectangleOutline(drawX, drawY, drawSize, drawSize, "#94702c", 2, [3, 5]);

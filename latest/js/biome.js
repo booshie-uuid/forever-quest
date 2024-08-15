@@ -7,8 +7,8 @@ class Biome
 
         this.name = null;
         this.theme = null;
-        this.commonRooms = null;
-        this.rareRooms = null;
+        this.commonMapTiles = null;
+        this.rareMapTiles = null;
         this.discoverables = null;
         this.commonEncounters = null;
         this.rareEncounters = null;
@@ -30,8 +30,8 @@ class Biome
 
         this.name = this.config.data.name;
         this.theme = this.config.data.theme;
-        this.commonRooms = this.config.data.commonRooms;
-        this.rareRooms = this.config.data.rareRooms;
+        this.commonMapTiles = this.config.data.commonMapTiles;
+        this.rareMapTiles = this.config.data.rareMapTiles;
         this.discoverables = this.config.data.discoverables;
         this.commonEncounters = this.config.data.commonEncounters;
         this.rareEncounters = this.config.data.rareEncounters;

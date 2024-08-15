@@ -21,7 +21,7 @@ class Engine
 
         // output controllers
         this.chat = new Chat(chatboxID);               
-        this.gfx = new GFX(displayID, 974, 680, this.error.bind(this));
+        this.gfx = new GFX(displayID, 1280, 720, this.error.bind(this));
 
         // input controllers and properties
         this.mouse = new Mouse(this.gfx.canvas, this.error.bind(this));
@@ -91,7 +91,7 @@ class Engine
         const welcomes = [];
 
         welcomes.push("Welcome to Forever Quest...");
-        welcomes.push("Click on rooms or use WASD to move around.");
+        welcomes.push("Click on tiles or use WASD to move around.");
 
         for(const welcome of welcomes)
         {
@@ -194,11 +194,11 @@ class Engine
 
         if(this.map.renderer !== null && (this.mouseDown && !this.mouse.isDown))
         {
-            const room = this.map.renderer.getRoomFromScreen(this.mouse.x, this.mouse.y);
+            const tile = this.map.renderer.getTileFromScreen(this.mouse.x, this.mouse.y);
 
-            if(room !== null)
+            if(tile !== null)
             {
-                this.player.setDestination(room);
+                this.player.setDestination(tile);
             }
         }
 

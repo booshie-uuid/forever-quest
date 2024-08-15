@@ -3,12 +3,12 @@
 
     "theme":
     {
-        "spriteSheet": "elven-ruins-standard.png",
+        "spriteSheet": "generic-dungeon.png",
         "backgroundColor": "#1a1412",
-        "roomShadowColor": "#5c4341"
+        "tileShadowColor": "#5c4341"
     },
 
-    "commonRooms": [
+    "commonMapTiles": [
         { "key": 1, "name": "Forest 1", "spriteX": 284, "spriteY": 2 },
         { "key": 2, "name": "Forest 2", "spriteX": 322, "spriteY": 2 },
         { "key": 3, "name": "Forest 3", "spriteX": 360, "spriteY": 2 },
@@ -20,7 +20,7 @@
     ],
 
 
-    "rareRooms": [
+    "rareMapTiles": [
         { "key": 9, "name": "Ruin 1", "spriteX": 284, "spriteY": 40 },
         { "key": 10, "name": "Ruin 2", "spriteX": 322, "spriteY": 40 },
         { "key": 11, "name": "Ruin 3", "spriteX": 360, "spriteY": 40 },
@@ -44,7 +44,7 @@
         {
             "key": 1,
             "designation": "npc",
-            "name": "Forest Shroom",
+            "name": "Forest Shtile",
             "allegiance": "Forest Creatures",
             "baseDisposition": "wary",
             "baseLevel": 1,

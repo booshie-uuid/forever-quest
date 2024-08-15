@@ -47,8 +47,9 @@
     <script src="<?= $ENV->release ?>/js/lootable.js"></script>
     <script src="<?= $ENV->release ?>/js/encounter.js"></script>
     <script src="<?= $ENV->release ?>/js/discoverable.js"></script>
-    <script src="<?= $ENV->release ?>/js/room.js"></script>
+    <script src="<?= $ENV->release ?>/js/mapTile.js"></script>
     <script src="<?= $ENV->release ?>/js/pathFinder.js"></script>
+    <script src="<?= $ENV->release ?>/js/dungeonSector.js"></script>
     <script src="<?= $ENV->release ?>/js/mapRenderer.js"></script>
     <script src="<?= $ENV->release ?>/js/mapGenerator.js"></script>
     <script src="<?= $ENV->release ?>/js/map.js"></script>

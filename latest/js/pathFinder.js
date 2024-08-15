@@ -1,18 +1,18 @@
 class PathNode
 {
-	constructor(parent, room)
+	constructor(parent, tile)
 	{
 		this.parent = parent;
-		this.room = room;
+		this.tile = tile;
 
-		this.index = room.col + (room.row * room.map.gridCols);
-		this.col = room.col;
-		this.row = room.row;
+		this.index = tile.col + (tile.row * tile.map.gridCols);
+		this.col = tile.col;
+		this.row = tile.row;
 		
 		this.currentCost = 0;
 		this.estimatedTotalCost = 0;
 
-		this.traversable = (room.type != Room.TYPES.EMPTY && room.status > 0);
+		this.traversable = (tile.type != MapTile.TYPES.EMPTY && tile.status > 0);
 	}
 }
 
@@ -25,13 +25,13 @@ class PathFinder
 
 	getNeighbors(node, cardinalOnly = true)
 	{
-		const neighborRooms = node.room.getNeighborsByDirection((cardinalOnly)? DIRECTIONS.getKeyDirections(): DIRECTIONS.getAllDirections());
-		const neighbors = neighborRooms.map(room => new PathNode(node, room));
+		const neighborMapTiles = node.tile.getNeighborsByDirection((cardinalOnly)? DIRECTIONS.getKeyDirections(): DIRECTIONS.getAllDirections());
+		const neighbors = neighborMapTiles.map(tile => new PathNode(node, tile));
 
 		return neighbors;
 	}
 
-	calculatePath(startingRoom, finishingRoom)
+	calculatePath(startingMapTile, finishingMapTile, allowedTypes = [MapTile.TYPES.FLOOR])
 	{
 		const path = [];
 
@@ -39,8 +39,8 @@ class PathFinder
 		const gridWidth = this.map.gridCols;
 		const gridHeight = this.map.gridRows;
 				
-		var startNode =  new PathNode(null, startingRoom);
-		var finishNode =  new PathNode(null, finishingRoom);
+		var startNode =  new PathNode(null, startingMapTile);
+		var finishNode =  new PathNode(null, finishingMapTile);
 		
 		// Maintain a list of nodes that need to be examined.
 		const pendingNodes = [startNode];
@@ -88,18 +88,18 @@ class PathFinder
 				{
 					// Get all traversable neighbouring nodes.
 					
-					const neighbours = this.getNeighbors(currentNode);
+					const neighbors = this.getNeighbors(currentNode);
 					
-					// Cycle through unvisited neighbours,
+					// Cycle through unvisited neighbors,
 					// calculating the cost of unvisited nodes and adding
 					// to the pending nodes list.
 					// Visited nodes will be discarded.
 					
-					for(let i = 0; i < neighbours.length; i++)
+					for(let i = 0; i < neighbors.length; i++)
 					{
-						var neighbour = neighbours[i];
+						var neighbour = neighbors[i];
 						
-						if(neighbour.traversable && !visitedNodes[neighbour.index])
+						if(allowedTypes.includes(neighbour.tile.type) && !visitedNodes[neighbour.index])
 						{
 							// Calculate costs.
 						

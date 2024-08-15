@@ -1,13 +1,24 @@
-class Room extends GameEntity
+class MapTile extends GameEntity
 {
     static TYPES = {
+        GEN_DOOR: -1,
+        GEN_JUNCTION: -2,
+        GEN_PATHWAY: -3,
+        GEN_EXPANSION: -4,
+        GEN_WALL: -5,
         EMPTY: 0,
-        REGULAR: 1,
-        DEADEND: 2,
-        SPAWN: 3,
-        EXIT: 4,
-        ENCOUNTER: 5,
-        DISCOVERABLE: 6
+        WALL: 2,
+        FLOOR: 3,
+        DOOR: 4,
+        COLUMN: 5,
+        REGULAR: 6,
+        DEADEND: 7,
+        SPAWN: 8,
+        EXIT: 9,
+        ENCOUNTER: 10,
+        DISCOVERABLE: 11,
+        JUNCTION: 12,
+        POTENTIAL_JUNCTION: 13
     }
 
     static RARITY = {
@@ -20,18 +31,18 @@ class Room extends GameEntity
         SPECIAL: "special"
     };
 
-    static generateEmptyRoom(map, col, row)
+    static generateEmptyMapTile(map, col, row)
     {
-        return new Room(map, [col, row]);
+        return new MapTile(map, [col, row]);
     }
 
     constructor(map, data)
     {
-        super(GameEntity.DESIGNATIONS.ROOM, `Room ${data[1]}, ${data[2]}`);
+        super(GameEntity.DESIGNATIONS.ROOM, `MapTile ${data[1]}, ${data[2]}`);
 
         this.map = map;
 
-        const [col, row, status, type, variant, rarity, childKey] = data;
+        const [col, row, status, type, variant, rarity, isOpen, isCorner, isNearDoor, isNearColumn] = data;
 
         this.col = (typeof col !== "undefined")? col: 0;
         this.row = (typeof row !== "undefined")? row: 0;
@@ -39,10 +50,13 @@ class Room extends GameEntity
         this.type = (typeof type !== "undefined")? type: 0;
         this.variant = (typeof variant !== "undefined")? variant: 0;
         this.rarity = (typeof rarity !== "undefined")? rarity: 0;
-        this.childKey = (typeof childKey !== "undefined")? childKey: null;
+        this.isOpen = (typeof isOpen !== "undefined")? isOpen: false;
+        this.isCorner = (typeof isCorner !== "undefined")? isCorner: null;
+        this.isNearDoor = (typeof isNearDoor !== "undefined")? isNearDoor: null;
+        this.isNearColumn = (typeof isNearColumn !== "undefined")? isNearColumn: null;
 
-        this.drawX = (this.col * 38);
-        this.drawY = (this.row * 38);
+        this.drawX = (this.col * this.map.renderer.outerDrawSize);
+        this.drawY = (this.row * this.map.renderer.outerDrawSize);
     }
 
     compress()
@@ -58,13 +72,22 @@ class Room extends GameEntity
         return (this.type == 0);
     }
 
+    isAdjacentOfType(direction, type)
+    {
+        const neighbor = this.getNeighborByDirection(direction);
+
+        if(neighbor === null) { return false; }
+
+        return neighbor.type == type;
+    }
+
     isConnected(direction)
     {
         const neighbor = this.getNeighborByDirection(direction);
 
         if(neighbor === null) { return false; }
 
-        return neighbor.type != Room.TYPES.EMPTY;
+        return neighbor.type != MapTile.TYPES.EMPTY;
     }
 
     getNeighborsByDirection(directions)
@@ -90,6 +113,6 @@ class Room extends GameEntity
         const row = this.col + deltas.col;
         const col = this.row + deltas.row;
 
-        return this.map.getRoom(row, col);
+        return this.map.getTile(row, col);
     }
 }

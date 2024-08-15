@@ -1,12 +1,81 @@
 class MapGenerator
 {
+    static STATES = {
+        UNKNOWN: 0,
+        LOADING: 1,
+        GENERATING: 2,
+        FINALIZING: 3
+    }
+
     constructor(map)
     {
         this.map = map;
+        this.state = MapGenerator.STATES.UNKNOWN;
+    }
+
+    update()
+    {
+        if(this.state == MapGenerator.STATES.COMPLETE)
+        {
+            return;
+        }
+        else if(this.state == MapGenerator.STATES.UNKNOWN)
+        {
+            this.state = MapGenerator.STATES.LOADING;
+
+            this.initializeGrid();
+            this.loadSectors();
+        }
+        else if(this.state == MapGenerator.STATES.LOADING)
+        {
+            let isDataReady = true;
+
+            for(const sector of this.map.sectors.flat())
+            {
+                if(!sector.isReady) { isDataReady = false; break; }
+            }
+
+            // yield if data is not ready
+            if(!isDataReady) { return; }
+            
+            this.state = MapGenerator.STATES.GENERATING;
+        }
+        else if(this.state == MapGenerator.STATES.GENERATING)
+        {
+            this.generateSectors();
+            this.connectRooms();
+            this.expandPathways();
+            this.expandWalls();
+            this.convertPlaceholders();
+            this.generateSpawn();
+
+            this.state = MapGenerator.STATES.FINALIZING;
+        }
+        else if(this.state == MapGenerator.STATES.FINALIZING)
+        {
+            // handle any debug requirements
+            //this.handleDebug();
+
+            // set the map state to ready
+            this.map.state = Map.STATES.MAP_READY;
+
+            // let the rest of the game know the map is ready
+            GEQ.enqueue(new GameEvent(GameEvent.TYPES.MAP, GameEntity.SPECIAL_ENTITIES.MAP, Map.STATES.MAP_READY));
+
+            this.map.renderer.calcDrawOffsetX(this.map.spawnMapTile.col, this.map.spawnMapTile.row, true);
+
+            this.state = MapGenerator.STATES.COMPLETE;
+        }
     }
 
     initializeGrid()
     {
+        const sectorCount = 4;
+        const sectorSize = 16;
+
+        this.map.gridRows = (sectorCount * sectorSize) + (2 * (sectorCount - 1));
+        this.map.gridCols = (sectorCount * sectorSize) + (2 * (sectorCount - 1));
+
         this.map.grid = this.map.grid || [];
 
         for (let rows = 0; rows < this.map.gridRows; rows++)
@@ -15,387 +84,394 @@ class MapGenerator
 
             for (let col = 0; col < this.map.gridCols; col++)
             {
-                this.map.grid[rows][col] = Room.generateEmptyRoom(this.map, col, rows, 0).compress();
+                this.map.grid[rows][col] = MapTile.generateEmptyMapTile(this.map, col, rows, 0).compress();
             }
         }
     }
 
-    generateRooms()
+    loadSectors()
     {
-        this.initializeGrid();
-        
-        // keep track of the rooms that have been populated
-        const rooms = [];
+        const sectorKeys = [
+            "generic-alter-room-001",
+            "generic-room-cluster-001"
+        ];
 
-        // generate a foundational path that crosses the entire grid       
-        this.generateFoundation(rooms);
+        // initialise the sectors that will control the layout of the level
+		// sectors are 16x16 groups of tiles with a pretedermined set of encounters
+		// encounters will be randomly placed throughout each sector
+		this.map.sectors = [];
+		this.sectorSize = 16;
 
-        // generate a series of corridors that branch off from the foundational path
-        this.generateCorridors(rooms);
+		for(let row = 0; row < 4; row++)
+		{
+            this.map.sectors[row] = this.map.sectors[row] || [];
 
-        // find all of the rooms that are deadends (flagged during corridor creation)
-        // deadends are important because they are where most encounters will be placed
-        let deadends = rooms.filter(room => room.type == Room.TYPES.DEADEND).sort(() => Math.random() - 0.5);      
+			for(let col = 0; col < 4; col++)
+			{
+                const key = SharedChance.pick(sectorKeys);
 
-        // close off a few loops to make the dungeon feel more interconnected
-        this.generateLoops(Math.min(4, deadends.length), deadends);
+				const startX = (col * this.sectorSize) + (col * 2);
+				const startY = (row * this.sectorSize) + (row * 2);
+				const finishX = startX + (this.sectorSize - 1);
+				const finishY = startY + (this.sectorSize - 1);
 
-        // update the list of deadends to remove any rooms that are no longer deadends
-        // due to the closing off of loops
-        deadends = deadends.filter(room => room.type === Room.TYPES.DEADEND);
-
-        // choose a deadend at random to serve as the spawn room
-        const spawnRoom = SharedChance.pick(deadends);
-
-        spawnRoom.type = Room.TYPES.SPAWN;
-        this.map.updateRoom(spawnRoom);
-
-        this.map.spawnRoom = spawnRoom;
-
-        this.map.currentCol = spawnRoom.col;
-        this.map.currentRow = spawnRoom.row;
-
-        // remove the spawn room from the list of available deadends
-        deadends = deadends.filter(room => room !== spawnRoom);
-
-        // sort deadends by their distance from the spawn room
-        // this will let us place rarer events further away from spawn
-        deadends.sort((roomA, roomB) => {
-            const distanceA = Math.abs(roomA.col - spawnRoom.col) + Math.abs(roomA.row - spawnRoom.row);
-            const distanceB = Math.abs(roomB.col - spawnRoom.col) + Math.abs(roomB.row - spawnRoom.row);
-            return distanceB - distanceA;       
-        });
-
-        // place the exit room at the farthest deadend from the spawn room
-        // using shift() so that the exit room is removed from the list of available deadends
-        const exitRoom = deadends.shift();
-
-        exitRoom.type = Room.TYPES.DISCOVERABLE;
-        exitRoom.rarity = Room.RARITY.SPECIAL;
-        exitRoom.childKey = "exit";
-
-        this.map.updateRoom(exitRoom);
-
-        while(deadends.length > 0)
-        {
-            // pick a random deadend but with bias towards ones that are further from spawn
-            // this works because the deadends are sorted by distance from the spawn room
-            // and biasedRange() will return a number closer to the minimum value
-            const index = SharedChance.biasedRange(0, deadends.length - 1);
-            const room = deadends[index];
-
-            // remove the chosen deadend from the list of available deadends
-            deadends.splice(index, 1);
-
-            if(this.map.undiscoveredLegendaryTreasures < this.map.maxLegendaryTreasures)
-            {
-                // legendary treasures
-                this.generateDiscoverable(room, Room.RARITY.LEGENDARY);
-                this.map.undiscoveredLegendaryTreasures++;
-            }
-            else if(this.map.undefeatedLegendaryEnemies < this.map.maxLegendaryEnemies)
-            {
-                // legendary enemies
-                this.generateEncounter(room, Room.RARITY.LEGENDARY);
-                this.map.undefeatedLegendaryEnemies++;
-            }
-            else if(this.map.undefeatedEpicEnemies < this.map.maxEpicEnemies)
-            {
-                // epic enemies
-                this.generateEncounter(room, Room.RARITY.EPIC);
-                this.map.undefeatedEpicEnemies++;
-            }
-            else if(this.map.undiscoveredEpicTreasures < this.map.maxEpicTreasures)
-            {
-                // epic treasures
-                this.generateDiscoverable(room, Room.RARITY.EPIC);
-                this.map.undiscoveredEpicTreasures++;
-            }
-            else if(this.map.undefeatedRareEnemies < this.map.maxRareEnemies)
-            {
-                // rare enemies
-                this.generateEncounter(room, Room.RARITY.RARE);
-                this.map.undefeatedRareEnemies++;
-            }
-            else if(this.map.undiscoveredRareTreasures < this.map.maxRareTreasures)
-            {
-                // rare treasures
-                this.generateDiscoverable(room, Room.RARITY.RARE);
-                this.map.undiscoveredRareTreasures++;
-            }
-            else
-            {
-                // we haven't exhausted the deadends,
-                // but we have placed everything we need to
-                break;
-            }
-        }
-
-        // explore the spawn room
-        this.map.exploreRoom(spawnRoom.col, spawnRoom.row);
-
-        // handle any debug requirements
-        this.handleDebug();
+				this.map.sectors[row][col] = new DungeonSector(this.map, key, startX, startY, finishX, finishY);
+			}
+		}
     }
 
-    generateFoundation(rooms)
+    generateSectors()
     {
-        // choose a random room towards the top left of the map to start the foundation
-        const startX = SharedChance.roll(0, 4);
-        const startY = SharedChance.roll(0, 4);
-        const startRoom = this.map.getRoom(startX, startY);
-
-        // choose a random room towards the bottom right of the map to finish the foundation
-        const finishX = this.map.gridCols - 1 - SharedChance.roll(0, 4);
-        const finishY = this.map.gridRows - 1 - SharedChance.roll(0, 4);
-        const finishRoom = this.map.getRoom(finishX, finishY);
-        
-        // generate a path between the start and finish rooms
-        const foundationPath = this.generatePath(startRoom, finishRoom);
-
-        // flag the start and end room of the foundation as deadends
-        startRoom.type = Room.TYPES.DEADEND;
-        this.map.updateRoom(startRoom);
-
-        finishRoom.type = Room.TYPES.DEADEND;
-        this.map.updateRoom(finishRoom);
-
-        // add all of the rooms along the foundation path to the list of populated rooms
-        rooms.push(...foundationPath);
-    }
-
-    generatePath(start, destination)
-    {
-        const path = [];
-        
-        let currentCol = start.col;
-        let currentRow = start.row;
-
-        // we will randomly pick a heading (horizontal or vertical) every few steps
-        // to ensure the path we create is more interesting
-        let isMovingHorizontally = SharedChance.flip();
-        let stepsSinceDirectionChange = 0;
-
-        while(currentCol !== destination.col || currentRow !== destination.row)
+        for(const row of this.map.sectors)
         {
-            // move towards the destination
-            currentCol = (isMovingHorizontally)? Number.converge(currentCol, destination.col): currentCol;
-            currentRow = (!isMovingHorizontally)? Number.converge(currentRow, destination.row): currentRow;
-
-            // force a switch in direction if we can no longer move closer in the current direction
-            isMovingHorizontally = (currentCol === destination.col)? false: isMovingHorizontally;
-            isMovingHorizontally = (currentRow === destination.row)? true: isMovingHorizontally;
-    
-            path.push(this.map.getRoom(currentCol, currentRow));
-
-            stepsSinceDirectionChange++;
-            const distance = (isMovingHorizontally)? Math.abs(destination.row - currentRow): Math.abs(destination.col - currentCol);
-            
-            if(stepsSinceDirectionChange > 3 && distance > 3)
+            for(const sector of row)
             {
-                isMovingHorizontally = SharedChance.flip();
-                stepsSinceDirectionChange = 0;
+                sector.constructRoom();
             }
-        }
-
-        for (const room of path)
-        {
-            room.type = (room.type === Room.TYPES.EMPTY)? Room.TYPES.REGULAR: room.type;
-            this.map.updateRoom(room);
-        }
-
-        return path;
-    }
-
-    generateCorridors(rooms)
-    {
-        const targetCorridors = SharedChance.range(50, 60);
-        let actualCorridors = 0;
-        let attempts = 0;
-
-        while(actualCorridors < targetCorridors && attempts < 1000)
-        {
-            const startRoom = SharedChance.pick(rooms);
-            const direction = DIRECTIONS.getRandomDirection(SharedChance);
-            const maxLength = SharedChance.range(6, 16);
-
-            const corridor = this.generateCorridor(startRoom, maxLength, direction, []);
-
-            if(corridor.length > 1)
-            {
-                const firstRoom = corridor.shift();
-                const lastRoom = corridor[corridor.length - 1];
-
-                // we use shift() to retrieve the first room in the corridor
-                // so that it is also removed from the list of rooms in the corridor
-                // this is because the first room was an existing room that we do not
-                // want to add to the list of populated rooms twice
-
-                // mark the first room in the cooridor as a regular room
-                // it may have previously been a deadend
-                firstRoom.type = Room.TYPES.REGULAR;
-                this.map.updateRoom(firstRoom);
-
-                // mark the last room in the cooridor as a deadend
-                // deadends are important as they are where most encounters will be place
-                lastRoom.type = Room.TYPES.DEADEND;
-                this.map.updateRoom(lastRoom);
-
-                // add all of the rooms in the corridor to the list of populated rooms
-                // (except the first room, which already existed)
-                rooms.push(...corridor);
-                
-                actualCorridors++;
-            }
-
-            attempts++;
         }
     }
 
-    generateCorridor(room, maxLength, direction, corridor)
+    generateSpawn()
     {
-        let neighbors = [];
+        const sectors = this.map.sectors.flat();
 
-        switch(direction)
-        {
-            case DIRECTIONS.NORTH:
-                neighbors.push(this.map.getRoom(room.col, room.row - 1));
-                neighbors.push(this.map.getRoom(room.col + 1, room.row - 1));
-                neighbors.push(this.map.getRoom(room.col - 1, room.row - 1));
-                break;
+        // establish spawn tile
+        const spawnSector = SharedChance.pick(sectors);
+        const possibleSpawnTiles = spawnSector.getTilePositions(MapTile.TYPES.FLOOR).map(pos => this.map.getTile(pos.col, pos.row));
 
-            case DIRECTIONS.EAST:
-                neighbors.push(this.map.getRoom(room.col + 1, room.row));
-                neighbors.push(this.map.getRoom(room.col + 1, room.row + 1));
-                neighbors.push(this.map.getRoom(room.col + 1, room.row - 1));
-                break;
+        const spawnTile = SharedChance.pick(possibleSpawnTiles);
 
-            case DIRECTIONS.SOUTH:
-                neighbors.push(this.map.getRoom(room.col, room.row + 1));
-                neighbors.push(this.map.getRoom(room.col + 1, room.row + 1));
-                neighbors.push(this.map.getRoom(room.col - 1, room.row + 1));
-                break;
+        spawnTile.type = MapTile.TYPES.SPAWN;
+        this.map.updateMapTile(spawnTile);
 
-            case DIRECTIONS.WEST:
-                neighbors.push(this.map.getRoom(room.col - 1, room.row));
-                neighbors.push(this.map.getRoom(room.col - 1, room.row + 1));
-                neighbors.push(this.map.getRoom(room.col - 1, room.row - 1));
-                break;
-        }
+        this.map.exploreMapTile(spawnTile.col, spawnTile.row);
 
-        // remove any neighbors that are null (off the edge of the map)
-        neighbors = neighbors.filter(neighbor => neighbor !== null);
-
-        // there should be either exactly 3 neighbors or exactly none (map edge)
-        if(neighbors.length !== 0 && neighbors.length !== 3) { return corridor; }
-
-        // if any of the neighbors are not empty, we have gone as far as we can go
-        if(neighbors.some(neighbor => neighbor.type !== Room.TYPES.EMPTY)) { return corridor; }
-
-        if (room.type === Room.TYPES.EMPTY)
-        {
-            room.type = Room.TYPES.REGULAR;
-            this.map.updateRoom(room);
-        }
-
-        corridor.push(room);
-
-        if(neighbors.length === 0)
-        { 
-            // stop if we have reached the edge of the map
-            return corridor;
-        }
-        else if(corridor.length >= maxLength + 1)
-        {
-            // stop if we have reached the maximum length of the corridor
-            // (+1 because of the initial room)
-            return corridor;
-        }
-        else
-        {
-            // continue trying to extend the corridor in the desired direction
-            return this.generateCorridor(neighbors[0], maxLength, direction, corridor);
-        }
+        this.map.spawnMapTile = spawnTile;
     }
 
-    generateLoops(count, deadends)
+    connectRooms()
     {
-        // randomise the order of the deadends so that the loops are not always in the same place
-        deadends.sort(() => Math.random() - 0.5);
+        // connect the rooms together by grouping sectors in to groups of four
+		// each group is comprised of two northern sectors and two southern sectors
+		// each group will have one external connection to the next group to the east (if it exists)
+		// each group will have one external connection to the next group to the south (if it exists)
+		// various internal connections within the group will ensure all rooms are accessible
+		const columns = 4;
+		const rows = 4;
+        const junctionBuffer = 1;
 
-        let loops = count;
-        let loopAttempts = 0;
+		// groups are formed by iterating over the grid in steps of 2
+		for(let row = 0; row < rows; row += 2)
+		{
+			for(let col = 0; col < columns; col += 2)
+			{
+				// establish external connections (beyond local group of 4 sectors)
+				const needsEasternConnection = (col + 2 < columns);
+				const needsSouthernConnection = (row + 2 < rows);
 
-        const allDirections = DIRECTIONS.getAllDirections();
-        const keyDirections = DIRECTIONS.getKeyDirections();
+				if(needsEasternConnection)
+				{
+					const rowOffsetA = SharedChance.range(0, 1);
+					const rowOffsetB = SharedChance.range(0, 1);
 
-        const allDirectionDeltas = DIRECTIONS.getDirectionsDeltas(allDirections);
-        const keyDirectionDeltas = DIRECTIONS.getDirectionsDeltas(keyDirections);
- 
-        for(const room of deadends)
+					const sectorA = this.map.sectors[row + rowOffsetA][col + 1];
+					const sectorB = this.map.sectors[row + rowOffsetB][col + 2];
+
+                    const doorA = this.createDoor(sectorA.doorPositions[DIRECTIONS.EAST]);
+                    const doorB = this.createDoor(sectorB.doorPositions[DIRECTIONS.WEST]);
+
+                    this.connectTiles(doorA, doorB);
+				}
+
+				if(needsSouthernConnection)
+				{
+					const colOffsetA = SharedChance.range(0, 1);
+					const colOffsetB = SharedChance.range(0, 1);
+
+					const sectorA = this.map.sectors[row + 1][col + colOffsetA];
+					const sectorB = this.map.sectors[row + 2][col + colOffsetB];
+
+                    const doorA = this.createDoor(sectorA.doorPositions[DIRECTIONS.SOUTH]);
+                    const doorB = this.createDoor(sectorB.doorPositions[DIRECTIONS.NORTH]);
+
+                    this.connectTiles(doorA, doorB);
+				}
+
+				// establish internal connections (within local group of 4 sectors)
+				const sectorA = this.map.sectors[row][col];
+				const sectorB = this.map.sectors[row][col + 1];
+				const sectorC = this.map.sectors[row + 1][col];
+				const sectorD = this.map.sectors[row + 1][col + 1];
+
+				const useDoubleInnerSouthernConnection = (SharedChance.range(0, 1) == 0);
+
+				if(useDoubleInnerSouthernConnection)
+				{
+					// make two inner southern connections
+                    const southDoorA = this.createDoor(sectorA.doorPositions[DIRECTIONS.SOUTH]);
+                    const southDoorB = this.createDoor(sectorB.doorPositions[DIRECTIONS.SOUTH]);
+                    const northDoorC = this.createDoor(sectorC.doorPositions[DIRECTIONS.NORTH]);
+                    const northDoorD = this.createDoor(sectorD.doorPositions[DIRECTIONS.NORTH]);
+
+                    this.connectTiles(southDoorA, northDoorC);
+                    this.connectTiles(southDoorB, northDoorD);
+
+					// make one inner eastern connection
+					const doorA = (SharedChance.range(0, 1) == 0)? this.createDoor(sectorA.doorPositions[DIRECTIONS.EAST]) : this.createDoor(sectorC.doorPositions[DIRECTIONS.EAST]);
+					const doorB = (SharedChance.range(0, 1) == 0)? this.createDoor(sectorB.doorPositions[DIRECTIONS.WEST]) : this.createDoor(sectorD.doorPositions[DIRECTIONS.WEST]);
+
+					this.connectTiles(doorA, doorB);
+				}
+				else
+				{
+					// make two inner easter connections
+                    const eastDoorA = this.createDoor(sectorA.doorPositions[DIRECTIONS.EAST]);
+                    const eastDoorC = this.createDoor(sectorC.doorPositions[DIRECTIONS.EAST]);
+                    const westDoorB = this.createDoor(sectorB.doorPositions[DIRECTIONS.WEST]);
+                    const westDoorD = this.createDoor(sectorD.doorPositions[DIRECTIONS.WEST]);
+
+                    this.connectTiles(eastDoorA, westDoorB);
+                    this.connectTiles(eastDoorC, westDoorD);
+
+					// make one inner eastern connection
+					const doorA = (SharedChance.range(0, 1) == 0)? this.createDoor(sectorA.doorPositions[DIRECTIONS.SOUTH]) : this.createDoor(sectorB.doorPositions[DIRECTIONS.SOUTH]);
+					const doorB = (SharedChance.range(0, 1) == 0)? this.createDoor(sectorC.doorPositions[DIRECTIONS.NORTH]) : this.createDoor(sectorD.doorPositions[DIRECTIONS.NORTH]);
+
+					this.connectTiles(doorA, doorB);
+				}
+			}
+		}
+
+        // clean up unused temporary doors
+        this.getTilesByType(MapTile.TYPES.GEN_DOOR).forEach(tile => { tile.type = MapTile.TYPES.WALL; this.map.updateMapTile(tile); });
+    }
+
+    createDoor(pos)
+    {
+        const tile = this.map.getTile(pos.col, pos.row);
+
+        tile.type = MapTile.TYPES.DOOR;
+        this.map.updateMapTile(tile);
+
+        return tile;
+    }
+
+    createJunction(pos, direction, buffer)
+    {
+        const delta = DIRECTIONS.getDirectionDeltas(direction);
+
+        const junctionCol = pos.col + (delta.col * buffer);
+        const junctionRow = pos.row + (delta.row * buffer);
+
+        const junctionTile = this.map.getTile(junctionCol, junctionRow);
+
+        junctionTile.type = MapTile.TYPES.GEN_JUNCTION;
+        this.map.updateMapTile(junctionTile);
+
+        return junctionTile;
+    }
+
+    connectTiles(tileA, tileB)
+	{
+		const path = this.map.pathFinder.calculatePath(tileA, tileB, [MapTile.TYPES.DOOR, MapTile.TYPES.GEN_DOOR, MapTile.TYPES.EMPTY, MapTile.TYPES.GEN_JUNCTION]);
+
+        for(const node of path)
         {
-            if(loops <= 0) { break; }
-            if(loopAttempts > 100) { break; }
+            const tile = node.tile;
 
-            // count how many adjoining rooms are not empty
-            // we count nulls as not empty because they are off the edge of the map
-            let adjoiningRoomCount = 0;
-            for (const delta of allDirectionDeltas)
+            if(tile.type == MapTile.TYPES.EMPTY)
             {
-                const neighbor = this.map.getRoom(room.col + delta.col, room.row + delta.row);
-
-                adjoiningRoomCount += (neighbor === null || neighbor.type !== Room.TYPES.EMPTY)? 1: 0;
+                tile.type = MapTile.TYPES.GEN_PATHWAY;
+                this.map.updateMapTile(tile);
             }
+        }
+	}
 
-            // we only want to create loops on deadends with one adjoining room,
-            // otherwise we would end up with overlapping corridors
-            if(adjoiningRoomCount !== 1) { continue; }
+    getTilesByType(type)
+    {
+        const tiles = [];
 
-            // check in each of the key directions to see if there is an opportunity to close the loop
-            // we only want to close loops where there is a single space seperating two corridors
-            for (const delta of keyDirectionDeltas)
+        for(const row of this.map.grid)
+        {
+            for(const col of row)
             {
-                const midRoom = this.map.getRoom(room.col + delta.col, room.row + delta.row);
-                const endRoom = this.map.getRoom(room.col + (2 * delta.col), room.row + (2 * delta.row));
+                const tile = new MapTile(this.map, col);
 
-                if(midRoom !== null && midRoom.type == Room.TYPES.EMPTY && endRoom !== null && endRoom.type != Room.TYPES.EMPTY)
+                if(tile.type === type)
                 {
-                    // update the middle room to be a regular room
-                    // to close the loop
-                    midRoom.type = Room.TYPES.REGULAR;
-                    this.map.updateRoom(midRoom);
-
-                    // update the start and end rooms to be regular rooms
-                    // as they are no longer deadends
-                    room.type = Room.TYPES.REGULAR;
-                    this.map.updateRoom(room);
-
-                    endRoom.type = Room.TYPES.REGULAR;
-                    this.map.updateRoom(endRoom);
-
-                    loops--;
-                    break;
+                    tiles.push(tile);
                 }
             }
+        }
 
-            loopAttempts++;
+        return tiles;
+    }
+
+    expandPathways()
+    {
+		// expand the pathways between rooms by converting adjacent unknown (empty) tiles to GEN_EXPANSION tiles
+		// the pathway tiles were set to GEN_PATHWAY in the previous step for easy identification during this step
+		for(const row of this.map.grid)
+        {
+            for(const col of row)
+            {
+                const tile = new MapTile(this.map, col);
+
+                if(tile.type !== MapTile.TYPES.GEN_PATHWAY) { continue; }
+
+                const neighbors = tile.getNeighborsByDirection(DIRECTIONS.getAllDirections());
+
+                for(const neighbour of neighbors.filter(candidate => candidate.type == MapTile.TYPES.EMPTY))
+                {
+                    if(neighbour.col == 0 || neighbour.col == this.map.gridCols - 1 || neighbour.row == 0 || neighbour.row == this.map.gridRows - 1) { continue; }
+
+                    neighbour.type = MapTile.TYPES.GEN_EXPANSION;
+                    this.map.updateMapTile(neighbour);
+                }
+            }
         }
     }
-    
-    generateEncounter(room, rarity)
-    {
-        room.type = Room.TYPES.ENCOUNTER;
-        room.rarity = rarity;
 
-        this.map.updateRoom(room);
+    expandWalls()
+    {
+		this.generateExpansionWalls();
+
+        this.closeVoids([MapTile.TYPES.GEN_WALL, MapTile.TYPES.WALL]);
+        this.closeVoids([MapTile.TYPES.GEN_EXPANSION]);
+        this.sealExpansion();
+        this.closeVoids([MapTile.TYPES.GEN_WALL, MapTile.TYPES.WALL]);
+        this.sealExpansion();
+
+        // convert GEN_WALL tiles in to walls tiles if they have any unknown (empty) neighbors
+        for(const row of this.map.grid)
+        {
+            for(const col of row)
+            {
+                const tile = new MapTile(this.map, col);
+
+                if(tile.type !== MapTile.TYPES.GEN_WALL) { continue; }
+
+                // determine how many neighbors are voids/unknown
+                const neighbors = tile.getNeighborsByDirection(DIRECTIONS.getAllDirections());
+                const voids = neighbors.reduce((acc, neighbour) => acc + ((neighbour.type === MapTile.TYPES.EMPTY) ? 1 : 0), 0);
+                
+                if(voids > 0 || tile.col == 0 || tile.col == this.map.gridCols - 1 || tile.row == 0 || tile.row == this.map.gridRows - 1)
+                {
+                    tile.type = MapTile.TYPES.GEN_WALL;
+                    this.map.updateMapTile(tile);
+                }
+                else
+                {
+                    tile.type = MapTile.TYPES.GEN_EXPANSION;
+                    this.map.updateMapTile(tile);
+                }
+            }
+        }
     }
 
-    generateDiscoverable(room, rarity)
+    generateExpansionWalls()
     {
-        room.type = Room.TYPES.DISCOVERABLE;
-        room.rarity = rarity;
+        // convert any unknown (empty) tiles that are adjacent to GEN_PATHWAY and GEN_EXPANSION tiles in to GEN_WALL tiles
+        // these will be candidates for becoming walls in the next step
+		for(const row of this.map.grid)
+        {
+            for(const col of row)
+            {
+                const tile = new MapTile(this.map, col);
 
-        this.map.updateRoom(room);
+                if(tile.type !== MapTile.TYPES.GEN_PATHWAY && tile.type !== MapTile.TYPES.GEN_EXPANSION) { continue; }
+
+                const neighbors = tile.getNeighborsByDirection(DIRECTIONS.getAllDirections());
+
+                for(const neighbour of neighbors.filter(candidate => candidate.type == MapTile.TYPES.EMPTY))
+                {
+                    neighbour.type = MapTile.TYPES.GEN_WALL;
+                    this.map.updateMapTile(neighbour);
+                }
+            }
+        }
+    }
+
+    closeVoids(adjacentTypes)
+    {
+        // convert any empty tiles that are adjacent to two GEN_WALL tiles in to GEN_EXPANSION tiles
+        for(const row of this.map.grid)
+        {
+            for(const col of row)
+            {
+                const tile = new MapTile(this.map, col);
+
+                if(tile.type !== MapTile.TYPES.EMPTY) { continue; }
+
+                // determine how many neighbors are voids/unknown
+
+                const horizontalNeighbors = tile.getNeighborsByDirection([DIRECTIONS.EAST, DIRECTIONS.WEST]);
+                const horizontalMatches = horizontalNeighbors.reduce((acc, neighbour) => acc + ((adjacentTypes.includes(neighbour.type)) ? 1 : 0), 0);
+
+                const verticalNeighbors = tile.getNeighborsByDirection([DIRECTIONS.NORTH, DIRECTIONS.SOUTH]);
+                const verticalMatches = verticalNeighbors.reduce((acc, neighbour) => acc + ((adjacentTypes.includes(neighbour.type)) ? 1 : 0), 0);
+                
+                if(horizontalMatches == 2 || verticalMatches == 2)
+                {
+                    tile.type = MapTile.TYPES.GEN_EXPANSION;
+                    this.map.updateMapTile(tile);
+                }
+            }
+        }
+    }
+
+    sealExpansion()
+    {
+        // convert any GEN_EXPANSION that are adjacent to void tiles in to GEN_WALL tiles
+        for(const row of this.map.grid)
+        {
+            for(const col of row)
+            {
+                const tile = new MapTile(this.map, col);
+
+                if(tile.type !== MapTile.TYPES.GEN_EXPANSION) { continue; }
+
+                // determine how many neighbors are voids/unknown
+                const neighbors = tile.getNeighborsByDirection(DIRECTIONS.getAllDirections());
+                const voids = neighbors.reduce((acc, neighbour) => acc + ((neighbour.type === MapTile.TYPES.EMPTY) ? 1 : 0), 0);
+                
+                if(voids > 0 || tile.col == 0 || tile.col == this.map.gridCols - 1 || tile.row == 0 || tile.row == this.map.gridRows - 1)
+                {
+                    tile.type = MapTile.TYPES.GEN_WALL;
+                    this.map.updateMapTile(tile);
+                }
+            }
+        }
+    }
+
+    convertPlaceholders()
+    {
+		for(const row of this.map.grid)
+		{
+            for(const col of row)
+            {
+                const tile = new MapTile(this.map, col);
+
+                if(tile.type === MapTile.TYPES.GEN_PATHWAY || tile.type === MapTile.TYPES.GEN_EXPANSION)
+                {
+                    tile.type = MapTile.TYPES.FLOOR;
+                    this.map.updateMapTile(tile);
+                }
+                else if(tile.type === MapTile.TYPES.GEN_WALL)
+                {
+                    tile.type = MapTile.TYPES.WALL;
+                    this.map.updateMapTile(tile);
+                }
+            }
+		}
+    }
+
+    generateEncounter(tile, rarity)
+    {
+        tile.type = MapTile.TYPES.ENCOUNTER;
+        tile.rarity = rarity;
+
+        this.map.updateMapTile(tile);
     }
 
     handleDebug()
@@ -410,12 +486,12 @@ class MapGenerator
         console.log(`Epic Treasures: ${this.map.undiscoveredEpicTreasures}/${this.map.maxEpicTreasures}`);
         console.log(`Rare Treasures: ${this.map.undiscoveredRareTreasures}/${this.map.maxRareTreasures}`);
 
-        // explore all the rooms
+        // explore all the tiles
         for(let row = 0; row < this.map.gridRows; row++)
         {
             for(let col = 0; col < this.map.gridCols; col++)
             {
-                this.map.exploreRoom(col, row);
+                this.map.exploreMapTile(col, row);
             }
         }
     }

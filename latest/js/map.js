@@ -24,13 +24,15 @@ class Map
         // map grid and grid properties
         this.grid = null;
 
-        this.gridCols = 25;
-        this.gridRows = 15;
+        this.gridCols = 64;
+        this.gridRows = 64;
+
+        this.sectors = [];
         
         this.currentCol = -1;
         this.currentRow = -1;
 
-        this.spawnRoom = null;
+        this.spawnMapTile = null;
 
         // encounter and discoverable properties
         this.undefeatedRareEnemies = 0;
@@ -90,105 +92,91 @@ class Map
         else if(this.state == Map.STATES.GENERATING_MAP)
         {
             // populate the grid if it has not already been done
-            this.generator.generateRooms();
-
-            // set the map state to ready
-            this.state = Map.STATES.MAP_READY;
-
-            // raise an event to let the game know the map is ready
-            GEQ.enqueue(new GameEvent(GameEvent.TYPES.MAP, GameEntity.SPECIAL_ENTITIES.MAP, this.state));
+            this.generator.update();
         }
     }
 
-    getCurrentRoom()
+    getCurrentMapTile()
     {
-        return this.getRoom(this.currentCol, this.currentRow);
+        return this.getTile(this.currentCol, this.currentRow);
     }
 
-    getRoom(x, y)
+    getTileFromPos(pos)
     {
-        if(x < 0 || x >= this.gridCols || y < 0 || y >= this.gridRows) { return null; }
+        if(pos === null) { return null; }
 
-        return new Room(this, this.grid[y][x]);
+        if(pos.col < 0 || pos.col >= this.gridCols || pos.row < 0 || pos.row >= this.gridRows) { return null; }
+
+        return this.getTile(pos.col, pos.row);
     }
 
-    updateRoom(room)
+    getTile(col, row)
     {
-        this.grid[room.row][room.col] = room.compress();
+        if(col < 0 || col >= this.gridCols || row < 0 || row >= this.gridRows) { return null; }
+
+        return new MapTile(this, this.grid[row][col]);
     }
 
-    exploreRoom(x, y)
+    updateMapTile(tile)
     {
-        const room = this.getRoom(x, y);
+        this.grid[tile.row][tile.col] = tile.compress();
+    }
+
+    exploreMapTile(col, row)
+    {
+        const tile = this.getTile(col, row);
 
         // yield if empty or already explored
-        if(room.type == Room.TYPES.EMPTY || room.status == 2) { return; }
+        if(tile.type == MapTile.TYPES.EMPTY || tile.status == 2) { return; }
 
-        let types = [];
-
-        if(room.type == Room.TYPES.REGULAR)
-        {    
-            types = this.biome.commonRooms;
-        }
-        else
-        {
-            types = this.biome.rareRooms;
-        }
-
-        let variant = 0; 
-        
-        if(SharedChance.range(0, 10) < 8)
-        {
-            variant = (types.length > 0)? SharedChance.range(0, types.length - 1): 0;
-        }
-        else
-        {
-            variant = (types.length > 1)? SharedChance.range(0, 1): 0;
-        }
-
-        let childKey = room.childKey;
+        let childKey = tile.childKey;
 
         if(childKey === null)
         {
-            switch(room.type)
+            switch(tile.type)
             {
-                case Room.TYPES.ENCOUNTER: childKey = Encounter.getRandomKey(this.biome, room); break;
-                case Room.TYPES.DISCOVERABLE: childKey = Discoverable.getRandomKey(this.biome, room); break;
+                case MapTile.TYPES.ENCOUNTER: childKey = Encounter.getRandomKey(this.biome, tile); break;
+                case MapTile.TYPES.DISCOVERABLE: childKey = Discoverable.getRandomKey(this.biome, tile); break;
                 default: null; break;
             }
         }
        
-        room.status = 2; // 2 = explored
-        room.variant = variant;
-        room.childKey = childKey;
+        if(tile.type == MapTile.TYPES.DOOR)
+        {
+            tile.isOpen = true;
+        }
 
-        this.updateRoom(room);
+        tile.status = 2; // 2 = explored
+        //tile.variant = variant;
+        tile.childKey = childKey;
 
-        let neighbors = room.getNeighborsByDirection(DIRECTIONS.getKeyDirections());
+        this.updateMapTile(tile);
+
+        let neighbors = tile.getNeighborsByDirection(DIRECTIONS.getKeyDirections());
 
         for(const neighbor of neighbors)
         {
             neighbor.status = (neighbor.status === 0)? 1: neighbor.status; // 1 = revealed
-            this.updateRoom(neighbor);
+            this.updateMapTile(neighbor);
         }
 
-        let encounter = Encounter.fromRoom(this.biome, room);
+        let encounter = Encounter.fromMapTile(this.biome, tile);
 
         if(encounter !== null && !encounter.isFaulted)
         {
             // create an event to let the game engine know an encounter has been triggered
-            const event = new GameEvent(GameEvent.TYPES.ENCOUNTER, room, encounter);
+            const event = new GameEvent(GameEvent.TYPES.ENCOUNTER, tile, encounter);
 
             // add event to the global event queue
             GEQ.enqueue(event);
         }
 
-        const discoverable = Discoverable.fromRoom(this.biome, room);
+        const discoverable = Discoverable.fromMapTile(this.biome, tile);
 
         if(discoverable !== null)
         {
             // create an event to let the game engine know a discoverable has been discovered
-            const event = new GameEvent(GameEvent.TYPES.DISCOVERY, room, discoverable);
+            const event = new GameEvent(GameEvent.TYPES.DISCOVERY, tile, discoverable);
 
             // add event to the global event queue
             GEQ.enqueue(event);
