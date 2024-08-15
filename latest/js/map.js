@@ -114,12 +114,12 @@ class Map
     {
         if(col < 0 || col >= this.gridCols || row < 0 || row >= this.gridRows) { return null; }
 
-        return new MapTile(this, this.grid[row][col]);
+        return this.grid[row][col];
     }
 
     updateMapTile(tile)
     {
-        this.grid[tile.row][tile.col] = tile.compress();
+        return; this.grid[tile.row][tile.col] = tile.compress();
     }
 
     exploreMapTile(col, row)

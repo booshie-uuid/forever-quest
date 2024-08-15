@@ -78,19 +78,83 @@ class MapRenderer
             this.drawOffsetY = Number.converge(this.drawOffsetY, this.targetDrawOffsetY);
         }
 
+        this.calculateLighting();
+
         //this.gfx.fillBackground(this.theme.backgroundColor);
         this.gfx.fillBackground("#100c07");
 
         for(let row = 0; row < this.map.gridRows; row++)
         {    
+            if(row < this.map.currentRow - 20 || row > this.map.currentRow + 20) { continue; }
+
             for(let col = 0; col < this.map.gridCols; col++)
             {
+                if(col < this.map.currentCol - 20 || col > this.map.currentCol + 20) { continue; }
+
                 const tile = this.map.getTile(col, row);
                 this.drawMapTile(tile);
             }
         }
         
         this.drawDebugHighlights();
+    }
+
+    calculateBrightness(tile, radius, maxBrightness, minBrightness)
+    {
+        const distance = Math.hypot(tile.row - this.map.currentRow, tile.col - this.map.currentCol);
+        const maxDistance = Math.hypot(radius, radius);
+        const relative = distance / maxDistance;
+
+        const brightness = maxBrightness - relative * (maxBrightness - minBrightness);
+
+        //if(brightness < minBrightness) { return minBrightness; }
+        
+        return brightness;
+    }
+
+    calculateLighting()
+    {
+        if(this.map.currentCol < 0 || this.map.currentRow < 0 || this.map.currentCol >= this.map.gridCols || this.map.currentRow >= this.map.gridRows) { return; }
+
+        // reset lighting to base
+        for(let row = 0; row < this.map.gridRows; row++)
+        {    
+            if(row < this.map.currentRow - 20 || row > this.map.currentRow + 20) { continue; }
+
+            for(let col = 0; col < this.map.gridCols; col++)
+            {
+                if(col < this.map.currentCol - 20 || col > this.map.currentCol + 20) { continue; }
+
+                const tile = this.map.getTile(col, row);
+                tile.brightness = (tile.status == 3)? 0.25 : Math.min(tile.brightness, 0.25);
+            }
+        }
+
+        // calculate new lighting
+        for(let angle = 0; angle < 360; angle += 1)
+        {
+            const radians = angle * Math.PI / 180;
+            let rayX = this.map.currentCol + 0.5;
+            let rayY = this.map.currentRow + 0.5;
+
+            for(let distance = 0; distance < 8; distance += 1)
+            {
+                rayX += Math.cos(radians);
+                rayY += Math.sin(radians);
+
+                const tile = this.map.getTile(Math.floor(rayX), Math.floor(rayY));
+                
+                const brightness = this.calculateBrightness(tile, 4.0, 1.0, 0.25);
+
+                tile.brightness = (brightness > tile.brightness)? brightness: tile.brightness;
+                tile.status = (tile.brightness >= 0.25)? 3: tile.status;
+
+                if(tile.type == MapTile.TYPES.WALL || (tile.type == MapTile.TYPES.DOOR && !tile.isOpen))
+                {
+                    break;
+                }
+            }
+        }
     }
 
     drawMapTile(tile)
@@ -117,7 +181,7 @@ class MapRenderer
             const spriteX = 34 + (tile.variant * 33);
             this.gfx.drawSprite(this.texture, spriteX, spriteY, drawX, drawY, this.outerDrawSize, this.outerDrawSize);  
         }
-        else if(tile.type == MapTile.TYPES.FLOOR || tile.type == MapTile.TYPES.DOOR)
+        else if(tile.type == MapTile.TYPES.FLOOR || tile.type == MapTile.TYPES.DOOR || tile.type == MapTile.TYPES.SPAWN)
         {
             const spriteY = 67;
             const spriteX = 34 + (tile.variant * 33);
@@ -131,23 +195,7 @@ class MapRenderer
             this.gfx.drawSprite(this.texture, spriteX, spriteY, drawX, drawY, this.outerDrawSize, this.outerDrawSize);  
         }
 
-        const radius = 4.0;
-        const distance = Math.hypot(tile.row - this.map.currentRow, tile.col - this.map.currentCol);
-        const maxDistance = Math.hypot(radius, radius);
-        const relative = distance / maxDistance;
-        const minBrightness = 0.1;
-        const maxBrightness = 1.0;
-
-        const brightness = maxBrightness - relative * (maxBrightness - minBrightness);
-        let darkness = 1.0 - brightness;
-
-        // darkness = (tile.status == 3 && darkness > 0.87)? 0.87: darkness;
-
-        // if(darkness <= 0.87)
-        // {
-        //     tile.status = 3;
-        //     this.map.updateMapTile(tile);
-        // }
+        let darkness = 1.0 - tile.brightness;
 
         const shadowColor = "rgba(16, 12, 7, " + darkness + ")";
 

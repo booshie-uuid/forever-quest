@@ -36,13 +36,13 @@ class MapTile extends GameEntity
         return new MapTile(map, [col, row]);
     }
 
-    constructor(map, data)
+    constructor(map, data = [])
     {
         super(GameEntity.DESIGNATIONS.ROOM, `MapTile ${data[1]}, ${data[2]}`);
 
         this.map = map;
 
-        const [col, row, status, type, variant, rarity, isOpen, isCorner, isNearDoor, isNearColumn] = data;
+        const [col, row, status, type, variant, rarity, brightness, isOpen, isCorner, isNearDoor, isNearColumn] = data;
 
         this.col = (typeof col !== "undefined")? col: 0;
         this.row = (typeof row !== "undefined")? row: 0;
@@ -50,6 +50,7 @@ class MapTile extends GameEntity
         this.type = (typeof type !== "undefined")? type: 0;
         this.variant = (typeof variant !== "undefined")? variant: 0;
         this.rarity = (typeof rarity !== "undefined")? rarity: 0;
+        this.brightness = (typeof brightness !== "undefined")? brightness: 0.0;
         this.isOpen = (typeof isOpen !== "undefined")? isOpen: false;
         this.isCorner = (typeof isCorner !== "undefined")? isCorner: null;
         this.isNearDoor = (typeof isNearDoor !== "undefined")? isNearDoor: null;

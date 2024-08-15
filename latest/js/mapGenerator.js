@@ -84,7 +84,7 @@ class MapGenerator
 
             for (let col = 0; col < this.map.gridCols; col++)
             {
-                this.map.grid[rows][col] = MapTile.generateEmptyMapTile(this.map, col, rows, 0).compress();
+                this.map.grid[rows][col] = MapTile.generateEmptyMapTile(this.map, col, rows, 0);
             }
         }
     }
@@ -293,9 +293,9 @@ class MapGenerator
 
         for(const row of this.map.grid)
         {
-            for(const col of row)
+            for(const tile of row)
             {
-                const tile = new MapTile(this.map, col);
+                //const tile = col;
 
                 if(tile.type === type)
                 {
@@ -313,10 +313,8 @@ class MapGenerator
 		// the pathway tiles were set to GEN_PATHWAY in the previous step for easy identification during this step
 		for(const row of this.map.grid)
         {
-            for(const col of row)
+            for(const tile of row)
             {
-                const tile = new MapTile(this.map, col);
-
                 if(tile.type !== MapTile.TYPES.GEN_PATHWAY) { continue; }
 
                 const neighbors = tile.getNeighborsByDirection(DIRECTIONS.getAllDirections());
@@ -345,10 +343,8 @@ class MapGenerator
         // convert GEN_WALL tiles in to walls tiles if they have any unknown (empty) neighbors
         for(const row of this.map.grid)
         {
-            for(const col of row)
+            for(const tile of row)
             {
-                const tile = new MapTile(this.map, col);
-
                 if(tile.type !== MapTile.TYPES.GEN_WALL) { continue; }
 
                 // determine how many neighbors are voids/unknown
@@ -375,10 +371,8 @@ class MapGenerator
         // these will be candidates for becoming walls in the next step
 		for(const row of this.map.grid)
         {
-            for(const col of row)
+            for(const tile of row)
             {
-                const tile = new MapTile(this.map, col);
-
                 if(tile.type !== MapTile.TYPES.GEN_PATHWAY && tile.type !== MapTile.TYPES.GEN_EXPANSION) { continue; }
 
                 const neighbors = tile.getNeighborsByDirection(DIRECTIONS.getAllDirections());
@@ -397,10 +391,8 @@ class MapGenerator
         // convert any empty tiles that are adjacent to two GEN_WALL tiles in to GEN_EXPANSION tiles
         for(const row of this.map.grid)
         {
-            for(const col of row)
+            for(const tile of row)
             {
-                const tile = new MapTile(this.map, col);
-
                 if(tile.type !== MapTile.TYPES.EMPTY) { continue; }
 
                 // determine how many neighbors are voids/unknown
@@ -425,10 +417,8 @@ class MapGenerator
         // convert any GEN_EXPANSION that are adjacent to void tiles in to GEN_WALL tiles
         for(const row of this.map.grid)
         {
-            for(const col of row)
+            for(const tile of row)
             {
-                const tile = new MapTile(this.map, col);
-
                 if(tile.type !== MapTile.TYPES.GEN_EXPANSION) { continue; }
 
                 // determine how many neighbors are voids/unknown
@@ -448,10 +438,8 @@ class MapGenerator
     {
 		for(const row of this.map.grid)
 		{
-            for(const col of row)
+            for(const tile of row)
             {
-                const tile = new MapTile(this.map, col);
-
                 if(tile.type === MapTile.TYPES.GEN_PATHWAY || tile.type === MapTile.TYPES.GEN_EXPANSION)
                 {
                     tile.type = MapTile.TYPES.FLOOR;
