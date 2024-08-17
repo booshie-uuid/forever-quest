@@ -1,4 +1,4 @@
-class MapTile extends GameEntity
+class MapTile
 {
     static TYPES = {
         DEBUG: -666,
@@ -25,16 +25,14 @@ class MapTile extends GameEntity
         SPECIAL: "special"
     };
 
-    static generateEmptyMapTile(map, col, row)
+    static generateEmptyMapTile(parentMap, col, row)
     {
-        return new MapTile(map, [col, row]);
+        return new MapTile(parentMap, [col, row]);
     }
 
-    constructor(map, data = [])
+    constructor(parentMap, data = [])
     {
-        super(GameEntity.DESIGNATIONS.ROOM, `MapTile ${data[1]}, ${data[2]}`);
-
-        this.map = map;
+        this.parent = parentMap;
 
         const [col, row, status, type, variant, rarity, brightness, isOpen, isCorner, isNearDoor, isNearColumn] = data;
 
@@ -58,8 +56,8 @@ class MapTile extends GameEntity
         this.symbol = null;
         this.isTraversable = false;
 
-        this.renderX = (this.col * this.map.renderer.outerDrawSize);
-        this.renderY = (this.row * this.map.renderer.outerDrawSize);
+        this.renderX = (this.col * this.parent.renderer.outerDrawSize);
+        this.renderY = (this.row * this.parent.renderer.outerDrawSize);
     }
 
     isHorizontal()
@@ -159,6 +157,6 @@ class MapTile extends GameEntity
         const row = this.col + deltas.col;
         const col = this.row + deltas.row;
 
-        return this.map.getTile(row, col);
+        return this.parent.getTile(row, col);
     }
 }

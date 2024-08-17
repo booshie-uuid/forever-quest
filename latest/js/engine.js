@@ -33,7 +33,7 @@ class Engine
         this.mouseDown = false;
 
         // key data controllers
-        this.map = new Map();
+        GAME.map = new Map();
 
         this.path = null;
 
@@ -48,8 +48,6 @@ class Engine
         this.playerDirectionX = 0;
         this.playerDirectionY = 0;
         this.playerLastMoved = Date.now();
-
-        this.mapRendered = false;
 
         this.update();
     }
@@ -77,12 +75,12 @@ class Engine
 
         if(GAME.gfx.main.isReady)
         {    
-            this.map.update(timestamp);
+            GAME.map.update(timestamp);
             this.player.update(timestamp);
 
-            if(this.map.state == Map.STATES.MAP_READY && this.map.renderer.isRenderStale)
+            if(GAME.map.state == Map.STATES.MAP_READY && GAME.map.renderer.isRenderStale)
             {
-                this.map.renderer.renderMap();
+                GAME.map.renderer.renderMap();
             }
         }
 
@@ -157,7 +155,7 @@ class Engine
 
         if(mapState == Map.STATES.MAP_READY)
         {
-            this.player.setMap(this.map);
+            this.player.setMap(GAME.map);
         }
     }
 
@@ -200,9 +198,9 @@ class Engine
             //
         }
 
-        if(this.map.renderer !== null && (this.mouseDown && !this.mouse.isDown))
+        if(GAME.map.renderer !== null && (this.mouseDown && !this.mouse.isDown))
         {
-            const tile = this.map.renderer.getTileFromScreen(this.mouse.x, this.mouse.y);
+            const tile = GAME.map.renderer.getTileFromScreen(this.mouse.x, this.mouse.y);
 
             if(tile !== null)
             {

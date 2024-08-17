@@ -5,7 +5,7 @@ class PathNode
 		this.parent = parent;
 		this.tile = tile;
 
-		this.index = tile.col + (tile.row * tile.map.gridCols);
+		this.index = tile.col + (tile.row * tile.parent.gridCols);
 		this.col = tile.col;
 		this.row = tile.row;
 		
