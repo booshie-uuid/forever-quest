@@ -1,25 +1,13 @@
 # LICENSING
 The code within this repository is covered by the Creative Commons Attribution-ShareAlike 4.0 International license.
 
-The images within this repository are NOT covered by that license and must be licensed from their creators (see credits below)
+This game is heavily inspired by Dungeon Crawl Stone Soup (DCSS), and makes use of many public domain (CC0) tiles and sprites from that project.
+
+Some images within this repository are NOT covered by that by the base license of this repository. For details on the licensing of images from the DCSS project, please see the following: 
+https://github.com/crawl/tiles/blob/master/TILES_UNDER_UNKNOWN_LICENSE.md
 
 # CREDITS
 ## DEVELOPMENT
-- Booshie (@booshie-uuid)
-
-## GRAPHICS
-Sprites for Forever Quests are based on collections from the following creators:
-
-- https://deepdivegamestudio.itch.io/
-- https://finalbossblues.itch.io/
-- https://secrethideout.itch.io/
-- https://elvgames.itch.io/
-- https://beowulf.itch.io/
-
-These collections have been rightfully licensed by the creators of Forever Quest. This licensing does not extend to forks of Forever Quest, or to any application of the sprites outside of the Forever Quest game.
-
-Sprites have been recoloured, edited, and amalgamated by the following contributors to Forever Quest:
-
 - Booshie (@booshie-uuid)
 
 ## TESTING

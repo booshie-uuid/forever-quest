@@ -11,7 +11,7 @@ class Map
     constructor(shouldDisableGeneration = false)
     {
         // key dependencies
-        this.biome = new Biome("elven-ruins-standard");
+        this.biome = new MapBiome("elven-ruins-standard");
         this.generator = new MapGenerator(this);
         this.renderer =  null; // initialised after data and texture load
         this.texture = null;

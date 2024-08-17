@@ -52,11 +52,11 @@
     <script src="<?= $ENV->release ?>/js/gameEventQueue.js"></script>
 
     <!-- game scripts -->
-    <script src="<?= $ENV->release ?>/js/biome.js"></script>
     <script src="<?= $ENV->release ?>/js/encounter.js"></script>
     <script src="<?= $ENV->release ?>/js/discoverable.js"></script>
     <script src="<?= $ENV->release ?>/js/pathFinder.js"></script>
     <script src="<?= $ENV->release ?>/js/map/mapTile.js"></script>
+    <script src="<?= $ENV->release ?>/js/map/mapBiome.js"></script>
     <script src="<?= $ENV->release ?>/js/map/mapSector.js"></script>
     <script src="<?= $ENV->release ?>/js/map/mapRenderer.js"></script>
     <script src="<?= $ENV->release ?>/js/map/mapGenerator.js"></script>
@@ -64,7 +64,8 @@
     <script src="<?= $ENV->release ?>/js/chatMessage.js"></script>
     <script src="<?= $ENV->release ?>/js/chat.js"></script>
     <script src="<?= $ENV->release ?>/js/engine.js"></script>
-    <script src="<?= $ENV->release ?>/js/player.js"></script>
+    <script src="<?= $ENV->release ?>/js/player/playerRenderer.js"></script>
+    <script src="<?= $ENV->release ?>/js/player/player.js"></script>
     <script src="<?= $ENV->release ?>/js/mapSectorEditor/mapSectorEditor.js"></script>
 
     <!-- GUI elements -->

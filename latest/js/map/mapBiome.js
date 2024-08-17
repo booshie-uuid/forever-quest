@@ -1,4 +1,4 @@
-class Biome
+class MapBiome
 {
     constructor(key)
     {

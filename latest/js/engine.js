@@ -155,7 +155,7 @@ class Engine
 
         if(mapState == Map.STATES.MAP_READY)
         {
-            this.player.setMap(GAME.map);
+            this.player.joinMap();
         }
     }
 

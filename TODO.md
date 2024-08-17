@@ -2,3 +2,4 @@
 - Create orchestrator and deprecate engine
 - Move player draw logic in to render component
 - Refactor out old "error handler" code
+- Move to 15x15 sectors, and 5x5 maps.

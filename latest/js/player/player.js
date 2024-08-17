@@ -4,7 +4,6 @@ class Player extends GameEntity
     {
         super(GameEntity.TYPE_PLAYER, name);
 
-        this.map = null;
         this.col = 0;
         this.row = 0;
 
@@ -13,51 +12,49 @@ class Player extends GameEntity
         this.movementDelay = 180;
         this.lastMoved = Date.now();
 
+        this.renderer = new PlayerRenderer(this);
+
         this.moveDirection = DIRECTIONS.NONE;
     }
 
-    setMap(map)
+    joinMap()
     {
-        this.map = map;
-
-        this.col = this.map.spawnMapTile.col;
-        this.row = this.map.spawnMapTile.row;
+        this.col = GAME.map.spawnMapTile.col;
+        this.row = GAME.map.spawnMapTile.row;
     }
 
-    update()
+    update(timestamp)
     {
-        // yield if the player is not assigned to a map
-        if(this.map === null) { return; }
+        // yield if there is no map for the player to interact with
+        if(GAME.map === null || GAME.map.state !== Map.STATES.MAP_READY) { return; }
 
-        if(this.map.renderer.transitionX == 0 && this.map.renderer.transitionY == 0)
+        if(GAME.map.renderer.transitionX == 0 && GAME.map.renderer.transitionY == 0)
         {
             this.moveManually();
             this.moveOnPath();
         }
 
-        if(this.col != this.map.currentCol || this.row != this.map.currentRow)
+        if(this.col != GAME.map.currentCol || this.row != GAME.map.currentRow)
         {
-            
+            GAME.map.renderer.transitionX = (GAME.map.currentCol < this.col)? -32: (GAME.map.currentCol > this.col)? 32: 0;
+            GAME.map.renderer.transitionY = (GAME.map.currentRow < this.row)? -32: (GAME.map.currentRow > this.row)? 32: 0;
 
-            this.map.renderer.transitionX = (this.map.currentCol < this.col)? -32: (this.map.currentCol > this.col)? 32: 0;
-            this.map.renderer.transitionY = (this.map.currentRow < this.row)? -32: (this.map.currentRow > this.row)? 32: 0;
-
-            this.map.currentCol = this.col;
-            this.map.currentRow = this.row;
+            GAME.map.currentCol = this.col;
+            GAME.map.currentRow = this.row;
         }
 
-        this.draw();
+        this.renderer.update(timestamp);
     }
 
     getTile()
     {
-        return this.map.getTile(this.col, this.row);
+        return GAME.map.getTile(this.col, this.row);
     }
 
     setDestination(tile)
     {
-        // yield if the player is not assigned to a map
-        if(this.map === null) { return; }
+        // yeild if there is no map for the player to interact with
+        if(GAME.map === null || GAME.map.state !== Map.STATES.MAP_READY) { return; }
 
         // yield if the tile is empty or unexplored
         if(tile.type == MapTile.TYPES.EMPTY) { return; }
@@ -65,15 +62,15 @@ class Player extends GameEntity
         const startingMapTile = this.getTile();
         const finishingMapTile = tile;
 
-        this.path = this.map.pathFinder.calculatePath(startingMapTile, finishingMapTile);
+        this.path = GAME.map.pathFinder.calculatePath(startingMapTile, finishingMapTile);
         this.path.pop();
     }
 
     moveManually()
     {
-        // yield if the player is not assigned to a map
+        // yield if there is no map for the player to interact with
         // or if the player is not moving manually
-        if(this.map === null || !this.isMovingManually) { return; }
+        if(GAME.map === null || GAME.map.state !== Map.STATES.MAP_READY || !this.isMovingManually) { return; }
 
         // yield if the player has moved to recently
         if(Date.now() - this.lastMoved < this.movementDelay) { return; }
@@ -88,7 +85,7 @@ class Player extends GameEntity
         const newCol = tile.col + delta.col;
         const newRow = tile.row + delta.row;
 
-        const newMapTile = this.map.getTile(newCol, newRow);
+        const newMapTile = GAME.map.getTile(newCol, newRow);
 
         // yield if the new location is empty or otherwise not a valid tile
         //if(newMapTile === null) { return; }
@@ -101,13 +98,13 @@ class Player extends GameEntity
         this.lastMoved = Date.now();
 
         // explore the new location
-        this.map.exploreMapTile(newCol, newRow);
+        GAME.map.exploreMapTile(newCol, newRow);
     }
 
     moveOnPath()
     {
-        // yield if the player is not assigned to a map
-        if(this.map === null) { return; }
+        // yeild if there is no map for the player to interact with
+        if(GAME.map === null || GAME.map.state !== Map.STATES.MAP_READY) { return; }
 
         // yield if the player has no path to follow
         if(this.path === null || this.path.length == 0) return;
@@ -120,7 +117,7 @@ class Player extends GameEntity
         this.col = tile.col;
         this.row = tile.row;
 
-        this.map.exploreMapTile(tile.col, tile.row);
+        GAME.map.exploreMapTile(tile.col, tile.row);
 
         this.lastMoved = Date.now();
     }
@@ -227,56 +224,4 @@ class Player extends GameEntity
             return false;
         }
     }
-
-    draw()
-    {
-        // yield if the player is not assigned to a map
-        if(this.map === null) { return; }
-
-        this.drawHighlights();
-    }
-
-    drawHighlights()
-    {
-        // highlight intended movement path
-        this.drawPathHighlghts();
-
-        // highlight current location
-        const tile = this.map.getTile(this.col, this.row);
-
-        // yield if the player is not located in a valid tile
-        if(tile === null) { return; }
-
-        const drawX = this.map.renderer.drawOffsetX;
-        const drawY = this.map.renderer.drawOffsetY;
-        const drawSize = this.map.renderer.outerDrawSize;
-
-        GAME.gfx.main.drawRectangleOutline(drawX, drawY, drawSize, drawSize, "#fab40b", 2);
-    }
-
-    drawPathHighlghts()
-    {
-        if(this.path !== null)
-        {
-            GAME.gfx.main.context.strokeStyle = "#FF0000";
-            GAME.gfx.main.context.lineWidth = 2;
-
-            GAME.gfx.main.context.beginPath();
-
-            for(let i = 0; i < this.path.length; i++)
-            {
-                const tile = this.path[i].tile;
-
-                const drawX = tile.renderX + this.map.renderer.drawOffsetX;
-                const drawY = tile.renderY + this.map.renderer.drawOffsetY;
-                const drawSize = this.map.renderer.outerDrawSize;
-
-                GAME.gfx.main.drawRectangleOutline(drawX, drawY, drawSize, drawSize, "#94702c", 2, [3, 5]);
-            }
-
-            GAME.gfx.main.context.stroke();
-        }
-    }
-
-
 }

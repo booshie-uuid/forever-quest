@@ -1,10 +1,10 @@
 class MapRenderer
 {
-    constructor(map)
+    constructor(parentMap)
     {
-        this.map = map;
-        this.texture = map.texture;
-        this.theme = map.biome.theme;
+        this.parent = parentMap;
+        this.texture = parentMap.texture;
+        this.theme = parentMap.biome.theme;
 
         this.drawOffsetX = 12;
         this.drawOffsetY = 12;
@@ -39,7 +39,7 @@ class MapRenderer
     {
         if(!this.isRenderStale) { return; }
 
-        for(const row of this.map.grid)
+        for(const row of this.parent.grid)
         {
             for(const tile of row)
             {
@@ -52,8 +52,8 @@ class MapRenderer
 
     getScreenPos(tile)
     {
-        const rowDelta = tile.col - this.map.currentCol;
-        const colDelta = tile.row - this.map.currentRow;
+        const rowDelta = tile.col - this.parent.currentCol;
+        const colDelta = tile.row - this.parent.currentRow;
 
         const x = (rowDelta * this.outerDrawSize) + this.drawOffsetX;
         const y = (colDelta * this.outerDrawSize) + this.drawOffsetY;
@@ -76,8 +76,8 @@ class MapRenderer
     getPosFromScreen(x, y)
     {
         return {
-            col: this.map.currentCol + Math.floor((x - this.drawOffsetX) / this.outerDrawSize),
-            row: this.map.currentRow + Math.floor((y - this.drawOffsetY) / this.outerDrawSize)
+            col: this.parent.currentCol + Math.floor((x - this.drawOffsetX) / this.outerDrawSize),
+            row: this.parent.currentRow + Math.floor((y - this.drawOffsetY) / this.outerDrawSize)
         };
     }
 
@@ -85,7 +85,7 @@ class MapRenderer
     {
         const pos = this.getPosFromScreen(x, y);
 
-        return this.map.getTile(pos.col, pos.row);
+        return this.parent.getTile(pos.col, pos.row);
     }
 
     update(timestamp)
@@ -122,7 +122,7 @@ class MapRenderer
         const renderY = tile.renderY;
 
         const type = (typeOverride !== null)? typeOverride: tile.type;
-        const spriteLocation = (type == MapTile.TYPES.SPECIAL)? this.map.biome.getSpriteLocationBySymbol(tile.symbol) : this.map.biome.getSpriteLocation(type);
+        const spriteLocation = (type == MapTile.TYPES.SPECIAL)? this.parent.biome.getSpriteLocationBySymbol(tile.symbol) : this.parent.biome.getSpriteLocation(type);
 
         if(spriteLocation !== null)
         {
@@ -149,7 +149,7 @@ class MapRenderer
     drawMap()
     {
         const tileSize = 32;
-        const currentTile = this.map.getTile(this.map.currentCol, this.map.currentRow);
+        const currentTile = this.parent.getTile(this.parent.currentCol, this.parent.currentRow);
 
         if(currentTile === null) { return; }
 
@@ -185,21 +185,21 @@ class MapRenderer
     {
         if(this.isLightingEnabled === false) { return; }
 
-        if(this.map.currentCol < 0 || this.map.currentRow < 0 || this.map.currentCol >= this.map.gridCols || this.map.currentRow >= this.map.gridRows) { return; }
+        if(this.parent.currentCol < 0 || this.parent.currentRow < 0 || this.parent.currentCol >= this.parent.gridCols || this.parent.currentRow >= this.parent.gridRows) { return; }
         
         const colOffset = (Math.floor(this.display.gridWidth / 2) + 1) * this.outerDrawSize;
         const rowOffset = (Math.floor(this.display.gridHeight / 2) + 1) * this.outerDrawSize;
 
-        const startCol = Number.limit(this.map.currentCol - colOffset, 0, this.map.gridCols - 1);
-        const startRow = Number.limit(this.map.currentRow - rowOffset, 0, this.map.gridRows - 1);
-        const finishCol = Number.limit(this.map.currentCol + colOffset, 0, this.map.gridCols - 1);
-        const finishRow = Number.limit(this.map.currentRow + rowOffset, 0, this.map.gridRows - 1);
+        const startCol = Number.limit(this.parent.currentCol - colOffset, 0, this.parent.gridCols - 1);
+        const startRow = Number.limit(this.parent.currentRow - rowOffset, 0, this.parent.gridRows - 1);
+        const finishCol = Number.limit(this.parent.currentCol + colOffset, 0, this.parent.gridCols - 1);
+        const finishRow = Number.limit(this.parent.currentRow + rowOffset, 0, this.parent.gridRows - 1);
 
         for(let row = startRow; row <= finishRow; row++)
         {
             for(let col = startCol; col <= finishCol; col++)
             {
-                const tile = this.map.getTile(col, row);
+                const tile = this.parent.getTile(col, row);
 
                 if(tile.isRevealed)
                 {
@@ -207,7 +207,7 @@ class MapRenderer
                 }
                 else
                 {
-                    const distance = Math.abs(col - this.map.currentCol) + Math.abs(row - this.map.currentRow);
+                    const distance = Math.abs(col - this.parent.currentCol) + Math.abs(row - this.parent.currentRow);
 
                     tile.proposedBrightness = 1.0 - (distance / 16.0);
                 }
@@ -218,8 +218,8 @@ class MapRenderer
         for(let angle = 0; angle < 360; angle += 1)
         {
             const radians = angle * Math.PI / 180;
-            let rayX = this.map.currentCol + 0.5;
-            let rayY = this.map.currentRow + 0.5;
+            let rayX = this.parent.currentCol + 0.5;
+            let rayY = this.parent.currentRow + 0.5;
 
             const maxDistance = 6;
             let dim = false;
@@ -229,7 +229,7 @@ class MapRenderer
                 rayX += Math.cos(radians);
                 rayY += Math.sin(radians);
 
-                const tile = this.map.getTile(Math.floor(rayX), Math.floor(rayY));
+                const tile = this.parent.getTile(Math.floor(rayX), Math.floor(rayY));
 
                 if(tile == null) { continue; }
 
