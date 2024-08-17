@@ -20,7 +20,7 @@ class Encounter extends Lootable
 
         if(typeof encounters === "undefined" || encounters === null || encounters.length == 0) { return null; }
 
-        return SharedChance.pick(encounters).key;
+        return GAME.chance.pick(encounters).key;
     }
 
     static fromMapTile(biome, tile)
@@ -99,7 +99,7 @@ class Encounter extends Lootable
 
     triggerRevealNarration()
     {
-        let narration = (this.revealNarration.length > 0)? SharedChance.pick(this.revealNarration).text: "You have encountered @NAME!";
+        let narration = (this.revealNarration.length > 0)? GAME.chance.pick(this.revealNarration).text: "You have encountered @NAME!";
 
         let article = Grammar.getIndefiniteArticle(this.name);
         let prefix = (article)? `${article} ` : "";

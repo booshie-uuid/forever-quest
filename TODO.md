@@ -1,0 +1,4 @@
+- Refactor cases where map is passed in constructor() to use GAME.map instead
+- Create orchestrator and deprecate engine
+- Move player draw logic in to render component
+- Refactor out old "error handler" code

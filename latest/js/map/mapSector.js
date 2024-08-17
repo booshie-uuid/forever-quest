@@ -1,11 +1,12 @@
-class DungeonSector
+class MapSector
 {
-    constructor(map, key, startCol, startRow, finishCol, finishRow)
+    constructor(map, key, startCol, startRow, finishCol, finishRow, shouldDisableTransformations = false)
 	{
         this.map = map;
         this.key = key;
         
         this.isReady = false;
+        this.isTranformationDisabled = shouldDisableTransformations;
         
         this.config = new GameData(`sectors/${key}.json`, this.unpackConfig.bind(this));
         this.layout = null; 
@@ -16,13 +17,13 @@ class DungeonSector
 		this.finishY = finishRow;
 
 		// to add variety to the level layout, each sector will have a random buffer around the edges
-		const northBias = (SharedChance.range(0, 1) == 0);
-		const eastBias = (SharedChance.range(0, 1) == 0);
+		const northBias = (GAME.chance.range(0, 1) == 0);
+		const eastBias = (GAME.chance.range(0, 1) == 0);
 
-		this.northBuffer = (northBias)? SharedChance.range(1, 4): SharedChance.range(1, 8);
-		this.southBuffer = (!northBias)? SharedChance.range(2, 4): SharedChance.range(2, 6);	
-		this.eastBuffer = (eastBias)? SharedChance.range(2, 4): SharedChance.range(2, 8);
-		this.westBuffer = (!eastBias)? SharedChance.range(1, 4): SharedChance.range(1, 6);
+		this.northBuffer = (northBias)? GAME.chance.range(1, 4): GAME.chance.range(1, 8);
+		this.southBuffer = (!northBias)? GAME.chance.range(2, 4): GAME.chance.range(2, 6);	
+		this.eastBuffer = (eastBias)? GAME.chance.range(2, 4): GAME.chance.range(2, 8);
+		this.westBuffer = (!eastBias)? GAME.chance.range(1, 4): GAME.chance.range(1, 6);
 
         this.roomStartCol = startCol + this.westBuffer;
         this.roomStartRow = startRow + this.northBuffer;
@@ -46,16 +47,26 @@ class DungeonSector
 		this.doorPositions[DIRECTIONS.WEST] = null;
 
 		// each sector will have a single encounter that will be placed within the sector
-		this.encounterCol = SharedChance.range(startCol + this.westBuffer + 1, finishCol - this.eastBuffer - 1);
-		this.encounterRow = SharedChance.range(startRow + this.northBuffer + 1, finishRow - this.southBuffer - 1);
+		this.encounterCol = GAME.chance.range(startCol + this.westBuffer + 1, finishCol - this.eastBuffer - 1);
+		this.encounterRow = GAME.chance.range(startRow + this.northBuffer + 1, finishRow - this.southBuffer - 1);
 	}
+
+    isWithinSector(tile)
+    {
+        return (tile.col >= this.startCol && tile.col <= this.finishX && tile.row >= this.startRow && tile.row <= this.finishY);
+    }
+    
+    isPosWithinSector(col, row)
+    {
+        return (col >= this.startCol && col <= this.finishX && row >= this.startRow && row <= this.finishY);
+    }
 
     unpackConfig()
     {
         this.layout = this.config.data.layout;
         this.isReady = true;
 
-        const transformation = SharedChance.range(1, 5);
+        const transformation = (this.isTranformationDisabled)? 0 : GAME.chance.range(1, 5);
 
         switch(transformation)
         {
@@ -167,33 +178,48 @@ class DungeonSector
         }
     }
 
-    decodeTileCode(code)
+    getTypeFromSymbol(symbol)
     {
-        const typeCode = code.substring(0, 1);
-        const variantCode = code.substring(1, 2);
-
         let type = null;
-        let variant = null;
-
-        switch(typeCode)
+        
+        switch(symbol)
         {
             case ".": type = MapTile.TYPES.EMPTY; break;
             case "#": type = MapTile.TYPES.WALL; break;
             case "%": type = MapTile.TYPES.FLOOR; break;
             case "@": type = MapTile.TYPES.GEN_DOOR; break;
+            case "~": type = MapTile.TYPES.WATER; break;
+            case "A": 
+            case "B":
+            case "C":
+            case "D":
+            case "E":
+            case "F": type = MapTile.TYPES.SPECIAL; break;
+            default: type = MapTile.TYPES.EMPTY; break;
         }
 
-        if(variantCode == typeCode)
+        return type;
+    }
+
+    decodeTileCode(code)
+    {
+        const symbol = code.substring(0, 1);
+        const modifier = code.substring(1);
+
+        let type = this.getTypeFromSymbol(symbol);
+        let variant = null;
+
+        if(modifier == symbol)
         {
-            variant = SharedChance.range(0, 7);
+            variant = GAME.chance.range(0, 7);
         }
         else
         {
-            variant = parseInt(variantCode);
+            variant = parseInt(modifier);
             variant = isNaN(variant)? 0: variant;
         }
 
-        return { type: type, variant: variant };
+        return { type: type, variant: variant, symbol: symbol };
     }
 
     getTilePositions(type)
@@ -214,9 +240,9 @@ class DungeonSector
                 const tileCode = this.layout[row][col];
                 const tileSettings = this.decodeTileCode(tileCode);
 
-                tile.type = tileSettings.type;
+                tile.symbol = tileSettings.symbol;
                 tile.variant = tileSettings.variant;
-                this.map.updateMapTile(tile);
+                tile.setType(tileSettings.type);              
 
                 if(!Array.isArray(this.tilePositions[tile.type])) { this.tilePositions[tile.type] = []; }
 

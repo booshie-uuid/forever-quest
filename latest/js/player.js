@@ -1,10 +1,8 @@
 class Player extends GameEntity
 {
-    constructor(name, gfx)
+    constructor(name)
     {
         super(GameEntity.TYPE_PLAYER, name);
-
-        this.gfx = gfx;
 
         this.map = null;
         this.col = 0;
@@ -31,13 +29,22 @@ class Player extends GameEntity
         // yield if the player is not assigned to a map
         if(this.map === null) { return; }
 
-        this.moveManually();
-        this.moveOnPath();
+        if(this.map.renderer.transitionX == 0 && this.map.renderer.transitionY == 0)
+        {
+            this.moveManually();
+            this.moveOnPath();
+        }
 
-        this.map.currentCol = this.col;
-        this.map.currentRow = this.row;
-        
-        this.map.renderer.calcDrawOffsetX(this.col, this.row);
+        if(this.col != this.map.currentCol || this.row != this.map.currentRow)
+        {
+            
+
+            this.map.renderer.transitionX = (this.map.currentCol < this.col)? -32: (this.map.currentCol > this.col)? 32: 0;
+            this.map.renderer.transitionY = (this.map.currentRow < this.row)? -32: (this.map.currentRow > this.row)? 32: 0;
+
+            this.map.currentCol = this.col;
+            this.map.currentRow = this.row;
+        }
 
         this.draw();
     }
@@ -53,7 +60,7 @@ class Player extends GameEntity
         if(this.map === null) { return; }
 
         // yield if the tile is empty or unexplored
-        if(tile.type = MapTile.TYPES.EMPTY || tile.status == 0) { return; }
+        if(tile.type == MapTile.TYPES.EMPTY) { return; }
 
         const startingMapTile = this.getTile();
         const finishingMapTile = tile;
@@ -240,34 +247,34 @@ class Player extends GameEntity
         // yield if the player is not located in a valid tile
         if(tile === null) { return; }
 
-        const drawX = tile.drawX + this.map.renderer.drawOffsetX;
-        const drawY = tile.drawY + this.map.renderer.drawOffsetY;
+        const drawX = this.map.renderer.drawOffsetX;
+        const drawY = this.map.renderer.drawOffsetY;
         const drawSize = this.map.renderer.outerDrawSize;
 
-        this.gfx.drawRectangleOutline(drawX, drawY, drawSize, drawSize, "#fab40b", 2);
+        GAME.gfx.main.drawRectangleOutline(drawX, drawY, drawSize, drawSize, "#fab40b", 2);
     }
 
     drawPathHighlghts()
     {
         if(this.path !== null)
         {
-            this.gfx.context.strokeStyle = "#FF0000";
-            this.gfx.context.lineWidth = 2;
+            GAME.gfx.main.context.strokeStyle = "#FF0000";
+            GAME.gfx.main.context.lineWidth = 2;
 
-            this.gfx.context.beginPath();
+            GAME.gfx.main.context.beginPath();
 
             for(let i = 0; i < this.path.length; i++)
             {
                 const tile = this.path[i].tile;
 
-                const drawX = tile.drawX + this.map.renderer.drawOffsetX;
-                const drawY = tile.drawY + this.map.renderer.drawOffsetY;
+                const drawX = tile.renderX + this.map.renderer.drawOffsetX;
+                const drawY = tile.renderY + this.map.renderer.drawOffsetY;
                 const drawSize = this.map.renderer.outerDrawSize;
 
-                this.gfx.drawRectangleOutline(drawX, drawY, drawSize, drawSize, "#94702c", 2, [3, 5]);
+                GAME.gfx.main.drawRectangleOutline(drawX, drawY, drawSize, drawSize, "#94702c", 2, [3, 5]);
             }
 
-            this.gfx.context.stroke();
+            GAME.gfx.main.context.stroke();
         }
     }
 

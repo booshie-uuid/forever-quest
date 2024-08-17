@@ -11,7 +11,7 @@ class Discoverable extends Lootable
 
         if(typeof discoverables === "undefined" || discoverables === null || discoverables.length == 0) { return null; }
 
-        return SharedChance.pick(discoverables).key;
+        return GAME.chance.pick(discoverables).key;
     }
 
     static fromMapTile(biome, tile)
@@ -66,7 +66,7 @@ class Discoverable extends Lootable
 
     triggerRevealNarration()
     {
-        let narration = (this.revealNarration.length > 0)? SharedChance.pick(this.revealNarration).text: "You have discovered @NAME!";
+        let narration = (this.revealNarration.length > 0)? GAME.chance.pick(this.revealNarration).text: "You have discovered @NAME!";
 
         let article = Grammar.getIndefiniteArticle(this.name);
         let prefix = (article)? `${article} ` : "";

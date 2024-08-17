@@ -11,5 +11,22 @@ class Number
     static interpolate(a, b, percent) { return a + (b - a) * percent; }
     static randomInt(min, max) { return Math.round(Number.interpolate(min, max, Math.random())); }
     static truncate(number) { return ~~number; }
-    static converge(current, target) { return (current < target)? current + 1 : (current > target)? current - 1 : current; }
+    
+    static converge(current, target, increment = 1) 
+    { 
+        if(current < target) 
+        { 
+            const value = current + increment;
+            
+            return (value > target)? target : value;
+        }
+        else if(current > target)
+        {
+            const value = current - increment;
+            
+            return (value < target)? target : value;
+        }
+
+        return current;
+    }
 }

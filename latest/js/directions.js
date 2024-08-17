@@ -24,7 +24,7 @@ class DIRECTIONS
     static getRandomDirection()
     {
         const directions = [DIRECTIONS.NORTH, DIRECTIONS.EAST, DIRECTIONS.SOUTH, DIRECTIONS.WEST];
-        const direction = SharedChance.pick(directions);
+        const direction = GAME.chance.pick(directions);
 
         return direction;
     }

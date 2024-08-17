@@ -16,6 +16,8 @@ class Biome
         this.legendaryEncounters = null;
         this.loot = null;
 
+        this.spriteLocations = [];
+
         this.config = new GameData(`biomes/${key}.json`, this.unpackConfig.bind(this));
     }
 
@@ -39,8 +41,26 @@ class Biome
         this.legendaryEncounters = this.config.data.legendaryEncounters;
         this.loot = this.config.data.loot;
 
+        this.spriteLocations = this.config.data.spriteLocations;
+        this.specialSectors = this.config.data.specialSectors;
+        this.generalSectors = this.config.data.generalSectors;
+
         this.isReady = true;
         this.isFaulted = false;
+    }
+
+    getSpriteLocation(type)
+    {
+        const location = this.spriteLocations.find(candidate => candidate.key == type);
+
+        return (typeof location === "undefined" || location === null)? null : location;
+    }
+
+    getSpriteLocationBySymbol(symbol)
+    {
+        const location = this.spriteLocations.find(candidate => candidate.symbol == symbol);
+
+        return (typeof location === "undefined" || location === null)? null : location;
     }
 
     determineLoot(target)
@@ -65,14 +85,14 @@ class Biome
             
             const potentialLoot = this.loot.filter(item => additionalLootKeys.includes(item.key) && item.rarity == rarity);
 
-            if(potentialLoot.length > 0) { additionalLoot.push(SharedChance.pick(potentialLoot)); }
+            if(potentialLoot.length > 0) { additionalLoot.push(GAME.chance.pick(potentialLoot)); }
 
         };
 
         let attempts = 0;
         while(additionalLoot.length < maxAdditionalLoot && attempts < 20)
         {
-            const roll = SharedChance.roll(1, 20);
+            const roll = GAME.chance.roll(1, 20);
 
             if(roll == 20) { awardItem("legendary"); }
             else if(roll >= 16) { awardItem("epic"); }

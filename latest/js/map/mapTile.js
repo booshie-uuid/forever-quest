@@ -1,6 +1,7 @@
 class MapTile extends GameEntity
 {
     static TYPES = {
+        DEBUG: -666,
         GEN_DOOR: -1,
         GEN_JUNCTION: -2,
         GEN_PATHWAY: -3,
@@ -9,16 +10,9 @@ class MapTile extends GameEntity
         EMPTY: 0,
         WALL: 2,
         FLOOR: 3,
-        DOOR: 4,
-        COLUMN: 5,
-        REGULAR: 6,
-        DEADEND: 7,
-        SPAWN: 8,
-        EXIT: 9,
-        ENCOUNTER: 10,
-        DISCOVERABLE: 11,
-        JUNCTION: 12,
-        POTENTIAL_JUNCTION: 13
+        WATER: 4,
+        DOOR: 5,
+        SPECIAL: 6,
     }
 
     static RARITY = {
@@ -51,21 +45,32 @@ class MapTile extends GameEntity
         this.variant = (typeof variant !== "undefined")? variant: 0;
         this.rarity = (typeof rarity !== "undefined")? rarity: 0;
         this.brightness = (typeof brightness !== "undefined")? brightness: 0.0;
+        this.previousBrightness = this.brightness;
         this.isOpen = (typeof isOpen !== "undefined")? isOpen: false;
         this.isCorner = (typeof isCorner !== "undefined")? isCorner: null;
         this.isNearDoor = (typeof isNearDoor !== "undefined")? isNearDoor: null;
         this.isNearColumn = (typeof isNearColumn !== "undefined")? isNearColumn: null;
+        this.isTransparent = false;
+        this.isNonVariant = false;
+        this.isTileHorizontal = null;
+        this.isRevealed = false;
+        this.proposedBrightness = 0.0;
+        this.symbol = null;
+        this.isTraversable = false;
 
-        this.drawX = (this.col * this.map.renderer.outerDrawSize);
-        this.drawY = (this.row * this.map.renderer.outerDrawSize);
+        this.renderX = (this.col * this.map.renderer.outerDrawSize);
+        this.renderY = (this.row * this.map.renderer.outerDrawSize);
     }
 
-    compress()
+    isHorizontal()
     {
-        // get all data fields (excluding inherited and calculated fields)
-        const { designation, name, map, drawX, drawY, ...rest } = this;
-    
-        return Object.values(rest);
+        if(this.isTileHorizontal !== null) { return this.isTileHorizontal; }
+        
+        const neighbor = this.getNeighborByDirection(DIRECTIONS.SOUTH);
+
+        this.isTileHorizontal = (neighbor === null || (neighbor.type !== MapTile.TYPES.WALL && neighbor.type !== MapTile.TYPES.DOOR));
+
+        return this.isTileHorizontal;
     }
 
     isEmpty(x, y)
@@ -89,6 +94,46 @@ class MapTile extends GameEntity
         if(neighbor === null) { return false; }
 
         return neighbor.type != MapTile.TYPES.EMPTY;
+    }
+
+    setType(type)
+    {
+        this.type = type;
+
+        const traversableTypes = [MapTile.TYPES.FLOOR, MapTile.TYPES.DOOR, MapTile.TYPES.SPECIAL];
+        this.isTraversable = traversableTypes.includes(type);
+
+        if(this.type == MapTile.TYPES.SPECIAL && ["A", "B", "C"].includes(this.symbol))
+        {
+            this.isTraversable = false;
+        }
+
+        const transparentTypes = [MapTile.TYPES.DOOR, MapTile.TYPES.SPECIAL];
+        this.isTransparent = transparentTypes.includes(type);
+
+        const nonVariantTypes = [MapTile.TYPES.DOOR];
+        this.isNonVariant = (nonVariantTypes.includes(type))? true : this.isNonVariant;
+
+        if(this.type == MapTile.TYPES.DOOR)
+        {
+            this.variant = (this.isOpen)? 1 : 0;
+        }
+    }
+
+    getRenderVariant()
+    {
+        let variant = this.variant;
+
+        if(this.type == MapTile.TYPES.DOOR)
+        {
+            variant = (this.isOpen)? 1 : 0;
+        }
+        else if(this.type == MapTile.TYPES.WALL && variant > 7 && !this.isHorizontal())
+        {
+            variant = variant - 8;
+        }
+
+        return variant;
     }
 
     getNeighborsByDirection(directions)

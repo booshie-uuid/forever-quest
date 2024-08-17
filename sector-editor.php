@@ -25,13 +25,14 @@
     <link href="https://fonts.googleapis.com/css2?family=Red+Hat+Display:ital,wght@0,300..900;1,300..900&display=swap" rel="stylesheet">
 
     <link rel="stylesheet" type="text/css" href="<?= $ENV->release ?>/css/main.css"/>
+    <link rel="stylesheet" type="text/css" href="<?= $ENV->release ?>/css/editor.css"/>
 
     <script>
         const ENV = { RELEASE: "<?= $ENV->release ?>", DEBUG: <?= $ENV->debug ?>, DEBUG_FLAGS: "<?= $ENV->debugFlags ?>" };
     </script>
 
     <!-- helpers -->
-    <script src="<?= $ENV->release ?>/js/game.js"></script>
+    <script src="<?= $ENV->release ?>/js/GAME.js"></script>
     <script src="<?= $ENV->release ?>/js/number.js"></script>
     <script src="<?= $ENV->release ?>/js/grammar.js"></script>
     <script src="<?= $ENV->release ?>/js/sharedChance.js"></script>
@@ -64,20 +65,77 @@
     <script src="<?= $ENV->release ?>/js/chat.js"></script>
     <script src="<?= $ENV->release ?>/js/engine.js"></script>
     <script src="<?= $ENV->release ?>/js/player.js"></script>
+    <script src="<?= $ENV->release ?>/js/mapSectorEditor/mapSectorEditor.js"></script>
+
+    <!-- GUI elements -->
+    <script src="<?= $ENV->release ?>/js/mapSectorEditor/spritePickerGUI.js"></script>
 
 </head>
 <body>
 
 <div class="container">
     <canvas id="display" width="800" height="600"></canvas>
-    <div id="chatbox" class="chatbox"></div>
+    <div class="editor">
+        <div class="form">
+            <table>
+                <tr><td class="label">SECTOR KEY:</td><td class="input"><input type="text" id="sectorKey" value="blank"></td></tr>
+                <tr><td class="label">&nbsp;</td><td class="input"><input type="button" value="IMPORT" onclick="importSector()"></td></tr>
+                <tr><td class="label">&nbsp;</td><td class="input"><input type="button" value="EXPORT" onclick="exportSector()"></td></tr>
+            </table>
+        </div>
+    </div>
 </div>
 
 <canvas id="buffer" style="display:none;visbility:hidden;"></canvas>
 
 <script type="text/javascript">
 
-const engine = new Engine(ENV.RELEASE, "chatbox", "display");
+let editor = new MapSectorEditor(ENV.RELEASE, "display", "blank");
+
+function importSector()
+{
+    const sectorKey = document.getElementById("sectorKey").value;
+    
+    editor = new MapSectorEditor(ENV.RELEASE, "display", sectorKey);
+}
+
+function exportSector()
+{
+	let sector = { "layout": editor.sector.layout };
+
+	let data = JSON.stringify(sector);
+
+	download(data, "sector.json", "application/json");
+}
+
+function download(data, filename, type)
+{
+    var file = new Blob([data], {type: type});
+
+    if (window.navigator.msSaveOrOpenBlob)
+    {
+        // IE10+
+        window.navigator.msSaveOrOpenBlob(file, filename);
+    }
+    else
+    { 
+        // Real Browsers
+        const anchor = document.createElement("a");
+        const url = URL.createObjectURL(file);
+
+        anchor.href = url;
+        anchor.download = filename;
+
+        document.body.appendChild(anchor);
+
+        anchor.click();
+        
+        setTimeout(function() {
+            document.body.removeChild(anchor);
+            window.URL.revokeObjectURL(url);  
+        }, 0);
+    }
+}
 
 </script>
 

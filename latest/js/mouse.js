@@ -1,10 +1,10 @@
 class Mouse
 {
-    constructor(canvas, errorHandler)
+    constructor(errorHandler)
     {
         this.error = errorHandler || console.log;
 
-        this.canvas = canvas;
+        this.canvas = GAME.gfx.main.canvas;
         
         this.x = 0;
         this.y = 0;

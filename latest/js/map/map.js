@@ -8,10 +8,9 @@ class Map
         MAP_READY: 4
     }
 
-    constructor(gfx)
+    constructor(shouldDisableGeneration = false)
     {
         // key dependencies
-        this.gfx = gfx;
         this.biome = new Biome("elven-ruins-standard");
         this.generator = new MapGenerator(this);
         this.renderer =  null; // initialised after data and texture load
@@ -20,6 +19,7 @@ class Map
 
         // map state and other important flags
         this.state = Map.STATES.LOADING_DATA;
+        this.isGenerationDisabled = shouldDisableGeneration;
 
         // map grid and grid properties
         this.grid = null;
@@ -36,30 +36,30 @@ class Map
 
         // encounter and discoverable properties
         this.undefeatedRareEnemies = 0;
-        this.maxRareEnemies = SharedChance.range(6, 8);
+        this.maxRareEnemies = GAME.chance.range(6, 8);
 
         this.undefeatedEpicEnemies = 0;
-        this.maxEpicEnemies = SharedChance.range(2, 3);
+        this.maxEpicEnemies = GAME.chance.range(2, 3);
 
         this.undefeatedLegendaryEnemies = 0;
         this.maxLegendaryEnemies = 1;
 
         this.undiscoveredRareTreasures = 0;
-        this.maxRareTreasures = SharedChance.range(4, 6);
+        this.maxRareTreasures = GAME.chance.range(4, 6);
 
         this.undiscoveredEpicTreasures = 0;
-        this.maxEpicTreasures = SharedChance.range(1, 2);
+        this.maxEpicTreasures = GAME.chance.range(1, 2);
 
         this.undiscoveredLegendaryTreasures = 0;
         this.maxLegendaryTreasures = 1;
     }
 
-    update()
+    update(timestamp)
     {
         if(this.state == Map.STATES.MAP_READY)
         {
             // draw the map
-            this.renderer.draw();
+            this.renderer.update(timestamp);
         }
         else if(this.state == Map.STATES.LOADING_DATA)
         {
@@ -89,10 +89,31 @@ class Map
                 this.renderer = new MapRenderer(this);
             }
         }
-        else if(this.state == Map.STATES.GENERATING_MAP)
+        else if(this.state == Map.STATES.GENERATING_MAP && !this.isGenerationDisabled)
         {
             // populate the grid if it has not already been done
             this.generator.update();
+        }
+    }
+
+    initializeGrid()
+    {
+        const sectorCount = 4;
+        const sectorSize = 16;
+
+        this.gridRows = (sectorCount * sectorSize) + (2 * (sectorCount - 1));
+        this.gridCols = (sectorCount * sectorSize) + (2 * (sectorCount - 1));
+
+        this.grid = this.grid || [];
+
+        for (let rows = 0; rows < this.gridRows; rows++)
+        {
+            this.grid[rows] = this.grid[rows] || [];
+
+            for (let col = 0; col < this.gridCols; col++)
+            {
+                this.grid[rows][col] = MapTile.generateEmptyMapTile(this, col, rows, 0);
+            }
         }
     }
 
@@ -115,6 +136,11 @@ class Map
         if(col < 0 || col >= this.gridCols || row < 0 || row >= this.gridRows) { return null; }
 
         return this.grid[row][col];
+    }
+
+    getTilesByType(type)
+    {
+        return this.grid.flat().filter(tile => tile.type === type);
     }
 
     updateMapTile(tile)

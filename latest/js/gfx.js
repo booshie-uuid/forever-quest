@@ -34,33 +34,35 @@ class GFX
     }
 
     fillBackground(colour)
-    {    
+    {   
         this.context.fillStyle = colour;
         this.context.fillRect(0, 0, this.width, this.height);
     }
 
-    drawLine(x1, y1, x2, y2, width, colour)
+    drawLine(x1, y1, x2, y2, strokeColor, width)
     {
         this.context.beginPath();
         this.context.translate(0.5,0.5);
         this.context.lineCap = "square";
         this.context.lineWidth = width;
-        this.context.fillStyle = colour;
-        this.context.strokeStyle = colour;
+        this.context.fillStyle = strokeColor;
+        this.context.strokeStyle = strokeColor;
         this.context.moveTo(x1,y1);
         this.context.lineTo(x2,y2);
-        this.context.stroke();
         this.context.translate(-0.5,-0.5);
+        this.context.closePath();
+        this.context.stroke();
     }
 
     drawRectangle(x, y, w, h, fillColour)
     {
         this.context.lineCap = "square";
         this.context.lineWidth = 0;
+        this.context.setLineDash([]);
         this.context.fillStyle = fillColour;
         this.context.strokeStyle = fillColour;
         this.context.fillRect(x, y, w, h);
-        this.context.stroke();
+        this.context.strokeRect(x, y, w, h);
     }
 
     drawRectangleOutline(x, y, w, h, strokeColour, strokeWidth, lineDash = [])
@@ -68,6 +70,7 @@ class GFX
         this.context.lineCap = "square";
         this.context.lineWidth = strokeWidth;
         this.context.setLineDash(lineDash);
+        this.context.fillStyle = strokeColour;
         this.context.strokeStyle = strokeColour;
         this.context.strokeRect(x, y, w, h);
     }
@@ -116,6 +119,7 @@ class GFX
     drawTriangle(x1, y1, x2, y2, x3, y3, colour)
     {
         this.context.fillStyle = colour;
+        this.context.strokeStyle = colour;
         this.context.beginPath();
         this.context.moveTo(x1, y1);
         this.context.lineTo(x2, y2);
@@ -136,18 +140,27 @@ class GFX
         this.context.fill();
     }
 
-    write(text, posX, posY, fontSize, fontColour)
+    measureText(text, fontSize, shouldBold = false)
+    {
+        this.context.textAlign = "left";
+        this.context.textBaseline = "top";
+        this.context.font = `${(shouldBold)? "bold " : ""}${fontSize}px \"Red Hat Display\"`;
+        
+        return this.context.measureText(text);
+    }
+
+    write(text, posX, posY, fontSize, fontColour, shouldBold = false)
     {
         this.context.textAlign = "left";
         this.context.textBaseline = "top";
         this.context.fillStyle = fontColour;
-        this.context.font = fontSize + "px Arial";
+        this.context.font = `${(shouldBold)? "bold " : ""}${fontSize}px \"Red Hat Display\"`;
         this.context.fillText(text, posX, posY);
     }
 
-    copyCanvas(canvas, destX, destY)
+    copyCanvas(canvas, sourceX, sourceY, sourceWidth, sourceHeight, destX, destY, destWidth, destHeight)
     {
-        this.context.drawImage(canvas, destX, destY);
+        this.context.drawImage(canvas, sourceX, sourceY, sourceWidth, sourceHeight, destX, destY, destWidth, destHeight);
     }
 
     drawSprite(texture, spriteX, spriteY, destX, destY, width = 32, height = 32)

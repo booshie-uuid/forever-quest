@@ -23,7 +23,7 @@ class MapGenerator
         {
             this.state = MapGenerator.STATES.LOADING;
 
-            this.initializeGrid();
+            this.map.initializeGrid();
             this.loadSectors();
         }
         else if(this.state == MapGenerator.STATES.LOADING)
@@ -68,33 +68,18 @@ class MapGenerator
         }
     }
 
-    initializeGrid()
-    {
-        const sectorCount = 4;
-        const sectorSize = 16;
-
-        this.map.gridRows = (sectorCount * sectorSize) + (2 * (sectorCount - 1));
-        this.map.gridCols = (sectorCount * sectorSize) + (2 * (sectorCount - 1));
-
-        this.map.grid = this.map.grid || [];
-
-        for (let rows = 0; rows < this.map.gridRows; rows++)
-        {
-            this.map.grid[rows] = this.map.grid[rows] || [];
-
-            for (let col = 0; col < this.map.gridCols; col++)
-            {
-                this.map.grid[rows][col] = MapTile.generateEmptyMapTile(this.map, col, rows, 0);
-            }
-        }
-    }
-
     loadSectors()
     {
-        const sectorKeys = [
-            "generic-alter-room-001",
-            "generic-room-cluster-001"
-        ];
+        const sectorConfigs = [];
+
+        sectorConfigs.push(...this.map.biome.specialSectors);
+
+        while(sectorConfigs.length < 16)
+        {
+            sectorConfigs.push(GAME.chance.pick(this.map.biome.generalSectors));
+        }
+
+        sectorConfigs.sort(() => GAME.chance.random() - 0.5);
 
         // initialise the sectors that will control the layout of the level
 		// sectors are 16x16 groups of tiles with a pretedermined set of encounters
@@ -108,14 +93,14 @@ class MapGenerator
 
 			for(let col = 0; col < 4; col++)
 			{
-                const key = SharedChance.pick(sectorKeys);
+                const sectorConfig = sectorConfigs.shift();
 
 				const startX = (col * this.sectorSize) + (col * 2);
 				const startY = (row * this.sectorSize) + (row * 2);
 				const finishX = startX + (this.sectorSize - 1);
 				const finishY = startY + (this.sectorSize - 1);
 
-				this.map.sectors[row][col] = new DungeonSector(this.map, key, startX, startY, finishX, finishY);
+				this.map.sectors[row][col] = new MapSector(this.map, sectorConfig.key, startX, startY, finishX, finishY);
 			}
 		}
     }
@@ -136,13 +121,12 @@ class MapGenerator
         const sectors = this.map.sectors.flat();
 
         // establish spawn tile
-        const spawnSector = SharedChance.pick(sectors);
+        const spawnSector = GAME.chance.pick(sectors);
         const possibleSpawnTiles = spawnSector.getTilePositions(MapTile.TYPES.FLOOR).map(pos => this.map.getTile(pos.col, pos.row));
 
-        const spawnTile = SharedChance.pick(possibleSpawnTiles);
+        const spawnTile = GAME.chance.pick(possibleSpawnTiles);
 
-        spawnTile.type = MapTile.TYPES.SPAWN;
-        this.map.updateMapTile(spawnTile);
+        spawnTile.setType(MapTile.TYPES.FLOOR);
 
         this.map.exploreMapTile(spawnTile.col, spawnTile.row);
 
@@ -171,8 +155,8 @@ class MapGenerator
 
 				if(needsEasternConnection)
 				{
-					const rowOffsetA = SharedChance.range(0, 1);
-					const rowOffsetB = SharedChance.range(0, 1);
+					const rowOffsetA = GAME.chance.range(0, 1);
+					const rowOffsetB = GAME.chance.range(0, 1);
 
 					const sectorA = this.map.sectors[row + rowOffsetA][col + 1];
 					const sectorB = this.map.sectors[row + rowOffsetB][col + 2];
@@ -185,8 +169,8 @@ class MapGenerator
 
 				if(needsSouthernConnection)
 				{
-					const colOffsetA = SharedChance.range(0, 1);
-					const colOffsetB = SharedChance.range(0, 1);
+					const colOffsetA = GAME.chance.range(0, 1);
+					const colOffsetB = GAME.chance.range(0, 1);
 
 					const sectorA = this.map.sectors[row + 1][col + colOffsetA];
 					const sectorB = this.map.sectors[row + 2][col + colOffsetB];
@@ -203,7 +187,7 @@ class MapGenerator
 				const sectorC = this.map.sectors[row + 1][col];
 				const sectorD = this.map.sectors[row + 1][col + 1];
 
-				const useDoubleInnerSouthernConnection = (SharedChance.range(0, 1) == 0);
+				const useDoubleInnerSouthernConnection = (GAME.chance.range(0, 1) == 0);
 
 				if(useDoubleInnerSouthernConnection)
 				{
@@ -217,8 +201,8 @@ class MapGenerator
                     this.connectTiles(southDoorB, northDoorD);
 
 					// make one inner eastern connection
-					const doorA = (SharedChance.range(0, 1) == 0)? this.createDoor(sectorA.doorPositions[DIRECTIONS.EAST]) : this.createDoor(sectorC.doorPositions[DIRECTIONS.EAST]);
-					const doorB = (SharedChance.range(0, 1) == 0)? this.createDoor(sectorB.doorPositions[DIRECTIONS.WEST]) : this.createDoor(sectorD.doorPositions[DIRECTIONS.WEST]);
+					const doorA = (GAME.chance.range(0, 1) == 0)? this.createDoor(sectorA.doorPositions[DIRECTIONS.EAST]) : this.createDoor(sectorC.doorPositions[DIRECTIONS.EAST]);
+					const doorB = (GAME.chance.range(0, 1) == 0)? this.createDoor(sectorB.doorPositions[DIRECTIONS.WEST]) : this.createDoor(sectorD.doorPositions[DIRECTIONS.WEST]);
 
 					this.connectTiles(doorA, doorB);
 				}
@@ -234,8 +218,8 @@ class MapGenerator
                     this.connectTiles(eastDoorC, westDoorD);
 
 					// make one inner eastern connection
-					const doorA = (SharedChance.range(0, 1) == 0)? this.createDoor(sectorA.doorPositions[DIRECTIONS.SOUTH]) : this.createDoor(sectorB.doorPositions[DIRECTIONS.SOUTH]);
-					const doorB = (SharedChance.range(0, 1) == 0)? this.createDoor(sectorC.doorPositions[DIRECTIONS.NORTH]) : this.createDoor(sectorD.doorPositions[DIRECTIONS.NORTH]);
+					const doorA = (GAME.chance.range(0, 1) == 0)? this.createDoor(sectorA.doorPositions[DIRECTIONS.SOUTH]) : this.createDoor(sectorB.doorPositions[DIRECTIONS.SOUTH]);
+					const doorB = (GAME.chance.range(0, 1) == 0)? this.createDoor(sectorC.doorPositions[DIRECTIONS.NORTH]) : this.createDoor(sectorD.doorPositions[DIRECTIONS.NORTH]);
 
 					this.connectTiles(doorA, doorB);
 				}
@@ -243,32 +227,16 @@ class MapGenerator
 		}
 
         // clean up unused temporary doors
-        this.getTilesByType(MapTile.TYPES.GEN_DOOR).forEach(tile => { tile.type = MapTile.TYPES.WALL; this.map.updateMapTile(tile); });
+        this.map.getTilesByType(MapTile.TYPES.GEN_DOOR).forEach(tile => tile.setType(MapTile.TYPES.WALL));
     }
 
     createDoor(pos)
     {
         const tile = this.map.getTile(pos.col, pos.row);
 
-        tile.type = MapTile.TYPES.DOOR;
-        this.map.updateMapTile(tile);
+        tile.setType(MapTile.TYPES.DOOR);
 
         return tile;
-    }
-
-    createJunction(pos, direction, buffer)
-    {
-        const delta = DIRECTIONS.getDirectionDeltas(direction);
-
-        const junctionCol = pos.col + (delta.col * buffer);
-        const junctionRow = pos.row + (delta.row * buffer);
-
-        const junctionTile = this.map.getTile(junctionCol, junctionRow);
-
-        junctionTile.type = MapTile.TYPES.GEN_JUNCTION;
-        this.map.updateMapTile(junctionTile);
-
-        return junctionTile;
     }
 
     connectTiles(tileA, tileB)
@@ -281,31 +249,10 @@ class MapGenerator
 
             if(tile.type == MapTile.TYPES.EMPTY)
             {
-                tile.type = MapTile.TYPES.GEN_PATHWAY;
-                this.map.updateMapTile(tile);
+                tile.setType(MapTile.TYPES.GEN_PATHWAY);
             }
         }
 	}
-
-    getTilesByType(type)
-    {
-        const tiles = [];
-
-        for(const row of this.map.grid)
-        {
-            for(const tile of row)
-            {
-                //const tile = col;
-
-                if(tile.type === type)
-                {
-                    tiles.push(tile);
-                }
-            }
-        }
-
-        return tiles;
-    }
 
     expandPathways()
     {
@@ -353,13 +300,11 @@ class MapGenerator
                 
                 if(voids > 0 || tile.col == 0 || tile.col == this.map.gridCols - 1 || tile.row == 0 || tile.row == this.map.gridRows - 1)
                 {
-                    tile.type = MapTile.TYPES.GEN_WALL;
-                    this.map.updateMapTile(tile);
+                    tile.setType(MapTile.TYPES.GEN_WALL);
                 }
                 else
                 {
-                    tile.type = MapTile.TYPES.GEN_EXPANSION;
-                    this.map.updateMapTile(tile);
+                    tile.setType(MapTile.TYPES.GEN_EXPANSION);
                 }
             }
         }
@@ -405,8 +350,7 @@ class MapGenerator
                 
                 if(horizontalMatches == 2 || verticalMatches == 2)
                 {
-                    tile.type = MapTile.TYPES.GEN_EXPANSION;
-                    this.map.updateMapTile(tile);
+                    tile.setType(MapTile.TYPES.GEN_EXPANSION);
                 }
             }
         }
@@ -427,8 +371,7 @@ class MapGenerator
                 
                 if(voids > 0 || tile.col == 0 || tile.col == this.map.gridCols - 1 || tile.row == 0 || tile.row == this.map.gridRows - 1)
                 {
-                    tile.type = MapTile.TYPES.GEN_WALL;
-                    this.map.updateMapTile(tile);
+                    tile.setType(MapTile.TYPES.GEN_WALL);
                 }
             }
         }
@@ -442,13 +385,11 @@ class MapGenerator
             {
                 if(tile.type === MapTile.TYPES.GEN_PATHWAY || tile.type === MapTile.TYPES.GEN_EXPANSION)
                 {
-                    tile.type = MapTile.TYPES.FLOOR;
-                    this.map.updateMapTile(tile);
+                    tile.setType(MapTile.TYPES.FLOOR);
                 }
                 else if(tile.type === MapTile.TYPES.GEN_WALL)
                 {
-                    tile.type = MapTile.TYPES.WALL;
-                    this.map.updateMapTile(tile);
+                    tile.setType(MapTile.TYPES.WALL);
                 }
             }
 		}
@@ -456,10 +397,8 @@ class MapGenerator
 
     generateEncounter(tile, rarity)
     {
-        tile.type = MapTile.TYPES.ENCOUNTER;
+        tile.setType(MapTile.TYPES.ENCOUNTER);
         tile.rarity = rarity;
-
-        this.map.updateMapTile(tile);
     }
 
     handleDebug()

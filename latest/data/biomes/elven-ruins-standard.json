@@ -4,9 +4,35 @@
     "theme":
     {
         "spriteSheet": "generic-dungeon.png",
-        "backgroundColor": "#1a1412",
+        "backgroundColor": "#140e02",
         "tileShadowColor": "#5c4341"
     },
+
+    "spriteLocations": [
+        {"key": 2, "symbol": "#", "name": "walls", "offsetX": 34, "offsetY": 34, "spacing": 33},
+        {"key": 3, "symbol": "%", "name": "walls", "offsetX": 34, "offsetY": 67, "spacing": 33},
+        {"key": 4, "symbol": "~", "name": "water", "offsetX": 34, "offsetY": 100, "spacing": 33},
+        {"key": 5, "symbol": "@", "name": "doors", "offsetX": 34, "offsetY": 133, "spacing": 33},
+        {"key": 6, "symbol": "A", "name": "doors", "offsetX": 34, "offsetY": 166, "spacing": 33},
+        {"key": 6, "symbol": "B", "name": "doors", "offsetX": 34, "offsetY": 199, "spacing": 33}
+    ],
+
+    "specialSectors": [
+        { "key": "iron-dragon-alter-001" },
+        { "key": "generic-alter-room-001" }
+    ],
+
+    "generalSectors": [
+        { "key": "hallway-sewer-001" },
+        { "key": "generic-room-001" },
+        { "key": "generic-room-002" },
+        { "key": "generic-room-cluster-001" },
+        { "key": "generic-room-cluster-002" },
+        { "key": "generic-room-cluster-003" },
+        { "key": "generic-room-cluster-004" },
+        { "key": "generic-room-cluster-005" },
+        { "key": "generic-room-cluster-006" }
+    ],
 
     "commonMapTiles": [
         { "key": 1, "name": "Forest 1", "spriteX": 284, "spriteY": 2 },

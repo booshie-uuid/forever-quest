@@ -13,7 +13,7 @@ class Engine
 
         // initialise shared controllers (singletons)
         // GEQ = new GameEventQueue();
-        const sharedChance = new SharedChance(Math.random());
+        GAME.chance = new SharedChance(Math.random());
 
         // key state properties
         this.isFaulted = false;
@@ -21,10 +21,11 @@ class Engine
 
         // output controllers
         this.chat = new Chat(chatboxID);               
-        this.gfx = new GFX(displayID, 1280, 720, this.error.bind(this));
+        GAME.gfx.main = new GFX(displayID, 1280, 720, this.error.bind(this));
+        GAME.gfx.buffer = new GFX("buffer", 2400, 2400, this.error.bind(this));
 
         // input controllers and properties
-        this.mouse = new Mouse(this.gfx.canvas, this.error.bind(this));
+        this.mouse = new Mouse(this.error.bind(this));
         this.mouse.onMouseChange = this.handleMouseChange.bind(this);
 
         this.keyboard = new Keyboard(this.handleKeyboardInput.bind(this));
@@ -32,12 +33,12 @@ class Engine
         this.mouseDown = false;
 
         // key data controllers
-        this.map = new Map(this.gfx);
+        this.map = new Map();
 
         this.path = null;
 
         // key entities
-        this.player = new Player("Player", this.gfx);
+        this.player = new Player("Player");
 
         this.activeEncounter = null;
 
@@ -48,13 +49,15 @@ class Engine
         this.playerDirectionY = 0;
         this.playerLastMoved = Date.now();
 
+        this.mapRendered = false;
+
         this.update();
     }
 
-    update()
+    update(timestamp)
     {
         // report and yield if chat or graphics engine are faulted
-        if(!this.chat.isReady || this.gfx.isFaulted)
+        if(!this.chat.isReady || GAME.gfx.main.isFaulted)
         {
             this.isFaulted = true;
             this.handleCatastrophicError();
@@ -72,10 +75,15 @@ class Engine
             this.welcomePlayer();
         }
 
-        if(this.gfx.isReady)
+        if(GAME.gfx.main.isReady)
         {    
-            this.map.update();
-            this.player.update();
+            this.map.update(timestamp);
+            this.player.update(timestamp);
+
+            if(this.map.state == Map.STATES.MAP_READY && this.map.renderer.isRenderStale)
+            {
+                this.map.renderer.renderMap();
+            }
         }
 
         this.chat.update();
@@ -229,7 +237,7 @@ class Engine
         }
 
         // could not initialise graphics engine
-        if(!this.gfx.isReady)
+        if(!GAME.gfx.main.isReady)
         {
             this.chat.addMessage(new ChatMessage(ChatMessage.TYPES.SHOUT, GameEntity.SPECIAL_ENTITIES.CLIENT, "A catastrophic error has occurred! Could not initialise the graphics engine. Are you running on a potato-based browser?"));
         }
