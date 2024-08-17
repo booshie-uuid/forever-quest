@@ -44,7 +44,7 @@ class MapSectorEditor
         this.mouseRow = null;
 
         // data components
-        this.sectorSize = 16;
+        this.sectorSize = 15;
 
         this.map = null;
         this.sector = null;
@@ -88,7 +88,7 @@ class MapSectorEditor
 				const finishCol = startCol + (this.sectorSize - 1);
 				const finishRow = startRow + (this.sectorSize - 1);
 
-                this.sector = new MapSector(this.map, this.sectorKey, startCol, startRow, finishCol, finishRow, true);
+                this.sector = new MapSector(this.map, this.sectorKey, startCol, startRow, finishCol, finishRow, false);
                 
                 this.state = MapSectorEditor.STATES.LOADING_SECTOR;
             }
@@ -119,7 +119,7 @@ class MapSectorEditor
                 for(const tile of row)
                 {
                     tile.brightness = 1.0;
-                    this.map.renderer.renderSprite(tile);
+                    this.map.renderer.renderTile(tile);
                 }
             }
 
@@ -181,6 +181,80 @@ class MapSectorEditor
         }
     }
 
+    updateDoor(tile)
+    {
+        const symbol = this.spritePicker.selectedSymbol;
+
+        if(symbol !== "@") { return; }
+
+        const doorDirection = this.calculateDoorPosition(tile);
+
+        if(doorDirection === DIRECTIONS.NONE)
+        {
+            this.error("Cannot place a door here.");
+            return;
+        }
+
+        let variant = 0;
+
+        switch(doorDirection)
+        {
+            case DIRECTIONS.NORTH: variant = 1; break;
+            case DIRECTIONS.EAST: variant = 2; break;
+            case DIRECTIONS.SOUTH: variant = 3; break;
+            case DIRECTIONS.WEST: variant = 4; break;
+            default: variant = 0; break;
+        }
+
+        tile.type = MapTile.TYPES.DOOR;
+        tile.isActivated = false;
+        tile.variant = variant;
+
+        tile.spritePositions.baseCol = variant;
+        tile.spritePositions.baseRow = MapTile.TYPES.DOOR;
+    }
+
+    updateOverlay(tile)
+    {
+        const symbol = this.spritePicker.selectedSymbol;
+
+        if(!["A", "B", "C", "D", "E", "F"].includes(symbol)) { return; }
+
+        tile.spritePositions.overlayCol = this.spritePicker.currentVariant;
+        tile.spritePositions.overlayRow = parseInt(symbol, 16);
+    }
+
+    updateBase(tile)
+    {
+        const symbol = this.spritePicker.selectedSymbol;
+
+        if(!["#", "%", "~"].includes(symbol)) { return; }
+
+        let type = this.sector.getTypeFromSymbol(symbol);
+        let variant = this.spritePicker.currentVariant;
+
+        // override the type & variant if the tile is being removed
+        tile.variant = variant;
+        tile.symbol = symbol;
+        
+        tile.spritePositions.baseCol = variant;
+        tile.spritePositions.baseRow = type;
+
+        tile.setType(type);
+    }
+
+    getCode(tile)
+    {
+        const baseCol = tile.spritePositions.baseCol.toString(16);
+        const baseRow = this.sector.getSymbolFromType(tile.type);
+        const overlayCol = (tile.spritePositions.overlayCol === null)? "" : tile.spritePositions.overlayCol.toString(16);
+        const overlayRow = (tile.spritePositions.overlayRow === null)? "" : tile.spritePositions.overlayRow.toString(16);
+
+        const code = baseRow + baseCol + overlayRow + overlayCol;
+
+        return code;
+    }
+
     updateTile(tile, isRemoveMode = false)
     {
         if(tile === null) { return; }
@@ -191,60 +265,32 @@ class MapSectorEditor
         console.log(`MAP COL: ${tile.col}, MAP ROW: ${tile.row}, TILE: ${tile.type}, VARIANT: ${tile.variant}`);
         console.log(`SEC COL: ${sectorCol}, SEC ROW: ${sectorRow}`);
 
-        let symbol = this.spritePicker.selectedSymbol;
-
-        let type = this.sector.getTypeFromSymbol(symbol);
-        let variant = this.spritePicker.currentVariant;
-
-        if(type === null) { return; }
-
-        if(symbol === "@")
+        if(isRemoveMode)
         {
-            type = MapTile.TYPES.DOOR;
+            tile.variant = 0;
+            tile.spritePositions.baseCol = 0;
+            tile.spritePositions.baseRow = 0;
+            tile.spritePositions.overlayCol = null;
+            tile.spritePositions.overlayRow = null;
 
-            const doorDirection = this.calculateDoorPosition(tile);
-
-            if(doorDirection === DIRECTIONS.NONE)
-            {
-                this.error("Cannot place a door here.");
-                return;
-            }
-
-            tile.isOpen = false;
-
-            switch(doorDirection)
-            {
-                case DIRECTIONS.NORTH: variant = 1; break;
-                case DIRECTIONS.EAST: variant = 2; break;
-                case DIRECTIONS.SOUTH: variant = 3; break;
-                case DIRECTIONS.WEST: variant = 4; break;
-                default: variant = 0; break;
-            }           
+            tile.setType(MapTile.TYPES.DEBUG);
         }
-
-        // override the type & variant if the tile is being removed
-        type = (isRemoveMode)? MapTile.TYPES.DEBUG : type;
-        variant = (isRemoveMode)? 0 : variant;
-        symbol = (isRemoveMode)? "." : symbol;
-
-        // update the tile
-        tile.setType(type);
-        tile.variant = variant;
-        tile.symbol = symbol;
-        tile.isNonVariant = true;
-
+        else
+        {
+            this.updateBase(tile);
+            this.updateOverlay(tile);
+            this.updateDoor(tile);
+        }
+        
         // force neighbors to recalculate their horizontal state
         const neighbors = tile.getNeighborsByDirection(DIRECTIONS.getAllDirections());
-        neighbors.forEach(neighbor => neighbor.isTileHorizontal = null);
+        neighbors.forEach(neighbor => neighbor.clearCheckResults());
 
         // update the map render
-        this.map.renderer.renderSprite(tile);
+        this.map.renderer.renderTile(tile);
 
         // update the sector layout
-        let code = symbol + variant.toString();
-
-        // override the code if the tile is being removed
-        code = (isRemoveMode)? ".." : code;
+        const code = (isRemoveMode)? ".." : this.getCode(tile);
 
         this.sector.layout[sectorRow][sectorCol] = code;
     }

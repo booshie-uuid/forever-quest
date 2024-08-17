@@ -31,7 +31,7 @@ class PathFinder
 		return neighbors;
 	}
 
-	calculatePath(startingMapTile, finishingMapTile, allowedTypes = [MapTile.TYPES.FLOOR, MapTile.TYPES.DOOR, MapTile.TYPES.WATER, MapTile.TYPES.SPECIAL])
+	calculatePath(startingMapTile, finishingMapTile, allowedTypes = [MapTile.TYPES.FLOOR, MapTile.TYPES.DOOR, MapTile.TYPES.SPECIAL])
 	{
 		const path = [];
 

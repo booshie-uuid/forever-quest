@@ -1,5 +1,7 @@
 class MapTile
 {
+    static TILE_SIZE = 32;
+
     static TYPES = {
         DEBUG: -666,
         GEN_DOOR: -1,
@@ -8,11 +10,11 @@ class MapTile
         GEN_EXPANSION: -4,
         GEN_WALL: -5,
         EMPTY: 0,
-        WALL: 2,
-        FLOOR: 3,
-        WATER: 4,
-        DOOR: 5,
-        SPECIAL: 6,
+        WALL: 1,
+        FLOOR: 2,
+        WATER: 3,
+        DOOR: 4,
+        SPECIAL: 5,
     }
 
     static RARITY = {
@@ -34,7 +36,7 @@ class MapTile
     {
         this.parent = parentMap;
 
-        const [col, row, status, type, variant, rarity, brightness, isOpen, isCorner, isNearDoor, isNearColumn] = data;
+        const [col, row, status, type, variant, rarity, brightness, isActivated, isCorner, isNearDoor, isNearColumn] = data;
 
         this.col = (typeof col !== "undefined")? col: 0;
         this.row = (typeof row !== "undefined")? row: 0;
@@ -42,17 +44,25 @@ class MapTile
         this.type = (typeof type !== "undefined")? type: 0;
         this.variant = (typeof variant !== "undefined")? variant: 0;
         this.rarity = (typeof rarity !== "undefined")? rarity: 0;
+
+        this.spritePositions = { baseCol: null, baseRow: null, overlayCol: null, overlayRow: null };
+
+        // properties used for calculating and displaying fog of war
         this.brightness = (typeof brightness !== "undefined")? brightness: 0.0;
         this.previousBrightness = this.brightness;
-        this.isOpen = (typeof isOpen !== "undefined")? isOpen: false;
-        this.isCorner = (typeof isCorner !== "undefined")? isCorner: null;
-        this.isNearDoor = (typeof isNearDoor !== "undefined")? isNearDoor: null;
-        this.isNearColumn = (typeof isNearColumn !== "undefined")? isNearColumn: null;
-        this.isTransparent = false;
-        this.isNonVariant = false;
-        this.isTileHorizontal = null;
-        this.isRevealed = false;
         this.proposedBrightness = 0.0;
+        
+        this.isRevealed = false;
+        this.isActivated = (typeof isActivated !== "undefined")? isActivated: false;
+
+        this.canHideOverlays = true;
+
+        // cached results of calculated checks
+        this.checkResults = {
+            isHorizontal: null
+        }
+        
+        
         this.symbol = null;
         this.isTraversable = false;
 
@@ -60,20 +70,27 @@ class MapTile
         this.renderY = (this.row * this.parent.renderer.outerDrawSize);
     }
 
-    isHorizontal()
+    clearCheckResults()
     {
-        if(this.isTileHorizontal !== null) { return this.isTileHorizontal; }
-        
-        const neighbor = this.getNeighborByDirection(DIRECTIONS.SOUTH);
-
-        this.isTileHorizontal = (neighbor === null || (neighbor.type !== MapTile.TYPES.WALL && neighbor.type !== MapTile.TYPES.DOOR));
-
-        return this.isTileHorizontal;
+        this.checkResults = {
+            isHorizontal: null
+        };
     }
 
     isEmpty(x, y)
     {
         return (this.type == 0);
+    }
+
+    isHorizontal()
+    {
+        if(this.checkResults.isHorizontal !== null) { return this.checkResults.isHorizontal; }
+        
+        const neighbor = this.getNeighborByDirection(DIRECTIONS.SOUTH);
+
+        this.checkResults.isHorizontal = (neighbor === null || (neighbor.type !== MapTile.TYPES.WALL && neighbor.type !== MapTile.TYPES.DOOR));
+
+        return this.checkResults.isHorizontal;
     }
 
     isAdjacentOfType(direction, type)
@@ -106,16 +123,13 @@ class MapTile
             this.isTraversable = false;
         }
 
-        const transparentTypes = [MapTile.TYPES.DOOR, MapTile.TYPES.SPECIAL];
-        this.isTransparent = transparentTypes.includes(type);
-
-        const nonVariantTypes = [MapTile.TYPES.DOOR];
-        this.isNonVariant = (nonVariantTypes.includes(type))? true : this.isNonVariant;
-
         if(this.type == MapTile.TYPES.DOOR)
         {
-            this.variant = (this.isOpen)? 1 : 0;
+            this.variant = (this.isActivated)? 1 : 0;
         }
+
+        this.spritePositions.baseCol = this.getRenderVariant();
+        this.spritePositions.baseRow = this.type;
     }
 
     getRenderVariant()
@@ -124,7 +138,7 @@ class MapTile
 
         if(this.type == MapTile.TYPES.DOOR)
         {
-            variant = (this.isOpen)? 1 : 0;
+            variant = (this.isActivated)? 1 : 0;
         }
         else if(this.type == MapTile.TYPES.WALL && variant > 7 && !this.isHorizontal())
         {

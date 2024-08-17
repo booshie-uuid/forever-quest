@@ -19,10 +19,18 @@ class Engine
         this.isFaulted = false;
         this.isReady = false;
 
+        // key data controllers
+        GAME.map = new Map();
+
+        const bufferWidth = ((GAME.map.sectorCount * MapSector.SECTOR_SIZE) + (2 * (GAME.map.sectorCount - 1))) * MapTile.TILE_SIZE;
+        const bufferHeight = ((GAME.map.sectorCount * MapSector.SECTOR_SIZE) + (2 * (GAME.map.sectorCount - 1))) * MapTile.TILE_SIZE;
+
+        console.log("Buffer dimensions: " + bufferWidth + " x " + bufferHeight);
+
         // output controllers
         this.chat = new Chat(chatboxID);               
         GAME.gfx.main = new GFX(displayID, 1280, 720, this.error.bind(this));
-        GAME.gfx.buffer = new GFX("buffer", 2400, 2400, this.error.bind(this));
+        GAME.gfx.buffer = new GFX("buffer", bufferWidth, bufferHeight, this.error.bind(this));
 
         // input controllers and properties
         this.mouse = new Mouse(this.error.bind(this));
@@ -32,8 +40,7 @@ class Engine
 
         this.mouseDown = false;
 
-        // key data controllers
-        GAME.map = new Map();
+
 
         this.path = null;
 

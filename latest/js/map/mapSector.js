@@ -1,12 +1,16 @@
 class MapSector
 {
-    constructor(map, key, startCol, startRow, finishCol, finishRow, shouldDisableTransformations = false)
+    static SECTOR_SIZE = 15;
+
+    constructor(map, key, startCol, startRow, finishCol, finishRow, canRotate = true, canHideOverlays = true)
 	{
         this.map = map;
         this.key = key;
         
         this.isReady = false;
-        this.isTranformationDisabled = shouldDisableTransformations;
+
+        this.canRotate = canRotate;
+        this.canHideOverlays = canHideOverlays;
         
         this.config = new GameData(`sectors/${key}.json`, this.unpackConfig.bind(this));
         this.layout = null; 
@@ -66,19 +70,15 @@ class MapSector
         this.layout = this.config.data.layout;
         this.isReady = true;
 
-        const transformation = (this.isTranformationDisabled)? 0 : GAME.chance.range(1, 5);
+        const rotations = (this.canRotate)? GAME.chance.range(0, 3) : 0;
 
-        switch(transformation)
-        {
-            case 1: this.rotateLayoutClockwise(); break;
-            case 2: this.rotateLayoutCounterClockwise(); break;
-            case 3: this.flipLayoutHorizontal(); break;
-            case 4: this.flipLayoutVertical(); break;
-            case 5: default: break;
+        for(let i = 0; i < rotations; i++)
+        { 
+            this.rotateLayout();
         }
     }
 
-    rotateLayoutClockwise()
+    rotateLayout()
     {
         const newLayout = this.layout[0].map((val, index) => this.layout.map(row => row[index]).reverse());
 
@@ -92,69 +92,6 @@ class MapSector
                 if(code == "@1") { newLayout[row][col] = "@E"; }
                 if(code == "@2") { newLayout[row][col] = "@S"; }
                 if(code == "@3") { newLayout[row][col] = "@W"; }
-            }
-        }
-
-        this.layout = newLayout;
-        this.fixRotatedDoorCodes();
-    }
-
-    flipLayoutHorizontal()
-    {
-        const newLayout = this.layout.map((row) => row.toReversed());
-
-        for(let row = 0; row < this.layout.length; row++)
-        {
-            for(let col = 0; col < this.layout[row].length; col++)
-            {
-                const code = newLayout[row][col];
-                
-                if(code == "@1") { newLayout[row][col] = "@N"; }
-                if(code == "@2") { newLayout[row][col] = "@W"; }
-                if(code == "@3") { newLayout[row][col] = "@S"; }
-                if(code == "@4") { newLayout[row][col] = "@E"; }
-            }
-        }
-    
-        this.layout = newLayout;
-        this.fixRotatedDoorCodes();
-    }
-
-    flipLayoutVertical()
-    {
-        const newLayout = this.layout.toReversed();
-
-        for(let row = 0; row < this.layout.length; row++)
-        {
-            for(let col = 0; col < this.layout[row].length; col++)
-            {
-                const code = newLayout[row][col];
-                
-                if(code == "@1") { newLayout[row][col] = "@S"; }
-                if(code == "@2") { newLayout[row][col] = "@E"; }
-                if(code == "@3") { newLayout[row][col] = "@N"; }
-                if(code == "@4") { newLayout[row][col] = "@W"; }
-            }
-        }
-    
-        this.layout = newLayout;
-        this.fixRotatedDoorCodes();
-    }
-
-    rotateLayoutCounterClockwise()
-    {
-        const newLayout = this.layout[0].map((val, index) => this.layout.map(row => row[row.length-1-index]));
-
-        for(let row = 0; row < this.layout.length; row++)
-        {
-            for(let col = 0; col < this.layout[row].length; col++)
-            {
-                const code = newLayout[row][col];
-                
-                if(code == "@2") { newLayout[row][col] = "@N"; }
-                if(code == "@3") { newLayout[row][col] = "@E"; }
-                if(code == "@4") { newLayout[row][col] = "@S"; }
-                if(code == "@1") { newLayout[row][col] = "@W"; }
             }
         }
 
@@ -178,6 +115,24 @@ class MapSector
         }
     }
 
+    getSymbolFromType(type)
+    {
+        let symbol = null;
+        
+        switch(type)
+        {
+            case MapTile.TYPES.EMPTY: symbol = "."; break;
+            case MapTile.TYPES.WALL: symbol = "#"; break;
+            case MapTile.TYPES.FLOOR: symbol = "%"; break;
+            case MapTile.TYPES.DOOR: symbol = "@"; break;
+            case MapTile.TYPES.GEN_DOOR: symbol = "@"; break;
+            case MapTile.TYPES.WATER: symbol = "~"; break;
+            default: symbol = "."; break;
+        }
+
+        return symbol;
+    }
+
     getTypeFromSymbol(symbol)
     {
         let type = null;
@@ -194,7 +149,7 @@ class MapSector
             case "C":
             case "D":
             case "E":
-            case "F": type = MapTile.TYPES.SPECIAL; break;
+            case "F": 
             default: type = MapTile.TYPES.EMPTY; break;
         }
 
@@ -203,23 +158,18 @@ class MapSector
 
     decodeTileCode(code)
     {
-        const symbol = code.substring(0, 1);
-        const modifier = code.substring(1);
+        let baseRow = this.getTypeFromSymbol(code.substring(0, 1));
+        let baseCol = parseInt(code.substring(1, 2), 16);
+        let overlayRow = (code.length > 2)? parseInt(code.substring(2, 3), 16) : null;
+        let overlayCol = (code.length > 3)? parseInt(code.substring(3, 4), 16) : null;
 
-        let type = this.getTypeFromSymbol(symbol);
-        let variant = null;
+        baseCol = (isNaN(baseCol))? 0 : baseCol;
+        baseRow = (isNaN(baseRow))? MapTile.TYPES.EMPTY : baseRow;
+        
+        overlayCol = (isNaN(overlayCol))? null : overlayCol;
+        overlayRow = (isNaN(overlayRow))? null : overlayRow;
 
-        if(modifier == symbol)
-        {
-            variant = GAME.chance.range(0, 7);
-        }
-        else
-        {
-            variant = parseInt(modifier);
-            variant = isNaN(variant)? 0: variant;
-        }
-
-        return { type: type, variant: variant, symbol: symbol };
+        return { baseCol, baseRow, overlayCol, overlayRow };
     }
 
     getTilePositions(type)
@@ -229,9 +179,9 @@ class MapSector
 
     constructRoom()
     {
-		for(let row = 0; row < 16; row++)
+		for(let row = 0; row < MapSector.SECTOR_SIZE; row++)
 		{
-			for(let col = 0; col < 16; col++)
+			for(let col = 0; col < MapSector.SECTOR_SIZE; col++)
 			{
                 const tileCol = this.startCol + col;
                 const tileRow = this.startRow + row;
@@ -239,10 +189,17 @@ class MapSector
 
                 const tileCode = this.layout[row][col];
                 const tileSettings = this.decodeTileCode(tileCode);
+                
+                tile.spritePositions.baseCol = tileSettings.baseCol;
+                tile.spritePositions.baseRow = tileSettings.baseRow;
+                tile.spritePositions.overlayCol = tileSettings.overlayCol;
+                tile.spritePositions.overlayRow = tileSettings.overlayRow;
 
-                tile.symbol = tileSettings.symbol;
-                tile.variant = tileSettings.variant;
-                tile.setType(tileSettings.type);              
+                tile.canHideOverlays = this.canHideOverlays;
+
+                tile.variant = tileSettings.baseCol;
+
+                tile.setType(tileSettings.baseRow);           
 
                 if(!Array.isArray(this.tilePositions[tile.type])) { this.tilePositions[tile.type] = []; }
 

@@ -24,8 +24,10 @@ class Map
         // map grid and grid properties
         this.grid = null;
 
-        this.gridCols = 64;
-        this.gridRows = 64;
+        this.sectorCount = 6; // 6x6 grid (must be multiple of 2)
+
+        this.gridCols = this.sectorCount * MapSector.SECTOR_SIZE;
+        this.gridRows = this.sectorCount * MapSector.SECTOR_SIZE;
 
         this.sectors = [];
         
@@ -98,11 +100,8 @@ class Map
 
     initializeGrid()
     {
-        const sectorCount = 4;
-        const sectorSize = 16;
-
-        this.gridRows = (sectorCount * sectorSize) + (2 * (sectorCount - 1));
-        this.gridCols = (sectorCount * sectorSize) + (2 * (sectorCount - 1));
+        this.gridRows = (this.sectorCount * MapSector.SECTOR_SIZE) + (2 * (this.sectorCount - 1));
+        this.gridCols = (this.sectorCount * MapSector.SECTOR_SIZE) + (2 * (this.sectorCount - 1));
 
         this.grid = this.grid || [];
 
@@ -153,7 +152,7 @@ class Map
         const tile = this.getTile(col, row);
 
         // yield if empty or already explored
-        if(tile.type == MapTile.TYPES.EMPTY || tile.status == 2) { return; }
+        if(tile.type == MapTile.TYPES.EMPTY || tile.status >= 2) { return; }
 
         let childKey = tile.childKey;
 
@@ -169,43 +168,22 @@ class Map
        
         if(tile.type == MapTile.TYPES.DOOR)
         {
-            tile.isOpen = true;
+            tile.isActivated = true;
         }
 
         tile.status = 2; // 2 = explored
-        //tile.variant = variant;
         tile.childKey = childKey;
+        tile.brightness = 1;
+        tile.isRevealed = true;
 
-        this.updateMapTile(tile);
+        this.renderer.renderTile(tile);
 
-        let neighbors = tile.getNeighborsByDirection(DIRECTIONS.getKeyDirections());
+        // let neighbors = tile.getNeighborsByDirection(DIRECTIONS.getKeyDirections());
 
-        for(const neighbor of neighbors)
-        {
-            neighbor.status = (neighbor.status === 0)? 1: neighbor.status; // 1 = revealed
-            this.updateMapTile(neighbor);
-        }
-
-        let encounter = Encounter.fromMapTile(this.biome, tile);
-
-        if(encounter !== null && !encounter.isFaulted)
-        {
-            // create an event to let the game engine know an encounter has been triggered
-            const event = new GameEvent(GameEvent.TYPES.ENCOUNTER, tile, encounter);
-
-            // add event to the global event queue
-            GEQ.enqueue(event);
-        }
-
-        const discoverable = Discoverable.fromMapTile(this.biome, tile);
-
-        if(discoverable !== null)
-        {
-            // create an event to let the game engine know a discoverable has been discovered
-            const event = new GameEvent(GameEvent.TYPES.DISCOVERY, tile, discoverable);
-
-            // add event to the global event queue
-            GEQ.enqueue(event);
-        }
+        // for(const neighbor of neighbors)
+        // {
+        //     neighbor.status = (neighbor.status === 0)? 1: neighbor.status; // 1 = revealed
+        //     this.updateMapTile(neighbor);
+        // }
     }
 }

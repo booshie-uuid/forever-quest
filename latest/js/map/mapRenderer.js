@@ -43,7 +43,7 @@ class MapRenderer
         {
             for(const tile of row)
             {
-                this.renderSprite(tile);
+                this.renderTile(tile);
             }
         }
 
@@ -116,25 +116,46 @@ class MapRenderer
         this.drawFog();
     }
 
-    renderSprite(tile, typeOverride = null)
+    renderSprite(renderX, renderY, spriteCol, spriteRow)
+    {
+        if(spriteCol === null || spriteRow === null || isNaN(spriteCol) || isNaN(spriteRow) || spriteCol < 0 || spriteRow < 0) { return; }
+
+        // sprite sheets don't currently have full set of rows, so adjust for the missing rows
+        spriteRow = (spriteRow >= 10)? spriteRow - 5: spriteRow;
+
+        const spriteX = 34 + (spriteCol * 33);
+        const spriteY = 1 + (spriteRow * 33);
+
+        GAME.gfx.buffer.drawSprite(this.texture, spriteX, spriteY, renderX, renderY, MapTile.TILE_SIZE, MapTile.TILE_SIZE);
+    }
+
+    renderTile(tile)
     {
         const renderX = tile.renderX;
         const renderY = tile.renderY;
 
-        const type = (typeOverride !== null)? typeOverride: tile.type;
-        const spriteLocation = (type == MapTile.TYPES.SPECIAL)? this.parent.biome.getSpriteLocationBySymbol(tile.symbol) : this.parent.biome.getSpriteLocation(type);
+        const type = tile.type;
 
-        if(spriteLocation !== null)
+        if(type == MapTile.TYPES.EMPTY || type == MapTile.TYPES.DEBUG)
         {
-            const variant = tile.getRenderVariant();
-            const spriteX = spriteLocation.offsetX + (variant * spriteLocation.spacing);
-            const spriteY = spriteLocation.offsetY;
+            GAME.gfx.buffer.drawRectangle(renderX, renderY, this.outerDrawSize, this.outerDrawSize, this.theme.backgroundColor);
+            return;
+        }
 
-            GAME.gfx.buffer.drawSprite(this.texture, spriteX, spriteY, renderX, renderY, this.outerDrawSize, this.outerDrawSize);
+        // render base sprite
+        if(type == MapTile.TYPES.DOOR)
+        {
+            const col = (tile.isActivated)? 1 : 0;
+            this.renderSprite(renderX, renderY, col, tile.spritePositions.baseRow);
         }
         else
         {
-            GAME.gfx.buffer.drawRectangle(renderX, renderY, this.outerDrawSize, this.outerDrawSize, this.theme.backgroundColor);
+            this.renderSprite(renderX, renderY, tile.spritePositions.baseCol, tile.spritePositions.baseRow);
+        }
+
+        if(tile.isHorizontal() || !tile.canHideOverlays)
+        {
+            this.renderSprite(renderX, renderY, tile.spritePositions.overlayCol, tile.spritePositions.overlayRow);
         }
 
         if(tile.brightness < 1)
@@ -245,7 +266,7 @@ class MapRenderer
                 tile.brightness = (distance > 3 || dim)? tile.proposedBrightness : 1.0;
                 tile.isRevealed = (distance > 3 || dim)? tile.isRevealed : true;
 
-                if(tile.type == MapTile.TYPES.WALL || (tile.type == MapTile.TYPES.DOOR && !tile.isOpen))
+                if(tile.type == MapTile.TYPES.WALL || (tile.type == MapTile.TYPES.DOOR && !tile.isActivated))
                 {
                     dim = true;
                 }
@@ -253,7 +274,7 @@ class MapRenderer
                 // update the map render if the tile brightness has changed
                 if(tile.previousBrightness != tile.brightness)
                 {
-                    this.renderSprite(tile);
+                    this.renderTile(tile);
                 }
             }
         }

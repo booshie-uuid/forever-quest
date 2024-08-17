@@ -7,9 +7,9 @@ class MapGenerator
         FINALIZING: 3
     }
 
-    constructor(map)
+    constructor(parentMap)
     {
-        this.map = map;
+        this.parent = parentMap;
         this.state = MapGenerator.STATES.UNKNOWN;
     }
 
@@ -23,14 +23,14 @@ class MapGenerator
         {
             this.state = MapGenerator.STATES.LOADING;
 
-            this.map.initializeGrid();
+            this.parent.initializeGrid();
             this.loadSectors();
         }
         else if(this.state == MapGenerator.STATES.LOADING)
         {
             let isDataReady = true;
 
-            for(const sector of this.map.sectors.flat())
+            for(const sector of this.parent.sectors.flat())
             {
                 if(!sector.isReady) { isDataReady = false; break; }
             }
@@ -57,12 +57,12 @@ class MapGenerator
             //this.handleDebug();
 
             // set the map state to ready
-            this.map.state = Map.STATES.MAP_READY;
+            this.parent.state = Map.STATES.MAP_READY;
 
             // let the rest of the game know the map is ready
             GEQ.enqueue(new GameEvent(GameEvent.TYPES.MAP, GameEntity.SPECIAL_ENTITIES.MAP, Map.STATES.MAP_READY));
 
-            this.map.renderer.calcDrawOffsetX(this.map.spawnMapTile.col, this.map.spawnMapTile.row, true);
+            this.parent.renderer.calcDrawOffsetX(this.parent.spawnMapTile.col, this.parent.spawnMapTile.row, true);
 
             this.state = MapGenerator.STATES.COMPLETE;
         }
@@ -72,42 +72,46 @@ class MapGenerator
     {
         const sectorConfigs = [];
 
-        sectorConfigs.push(...this.map.biome.specialSectors);
+        sectorConfigs.push(...this.parent.biome.specialSectors);
 
-        while(sectorConfigs.length < 16)
+        while(sectorConfigs.length < (this.parent.sectorCount * this.parent.sectorCount))
         {
-            sectorConfigs.push(GAME.chance.pick(this.map.biome.generalSectors));
+            sectorConfigs.push(GAME.chance.pick(this.parent.biome.generalSectors));
         }
 
         sectorConfigs.sort(() => GAME.chance.random() - 0.5);
 
         // initialise the sectors that will control the layout of the level
-		// sectors are 16x16 groups of tiles with a pretedermined set of encounters
+		// sectors are 15x15 groups of tiles with a pretedermined set of encounters
 		// encounters will be randomly placed throughout each sector
-		this.map.sectors = [];
-		this.sectorSize = 16;
+		this.parent.sectors = [];
 
-		for(let row = 0; row < 4; row++)
+		for(let row = 0; row < this.parent.sectorCount; row++)
 		{
-            this.map.sectors[row] = this.map.sectors[row] || [];
+            this.parent.sectors[row] = this.parent.sectors[row] || [];
 
-			for(let col = 0; col < 4; col++)
+			for(let col = 0; col < this.parent.sectorCount; col++)
 			{
                 const sectorConfig = sectorConfigs.shift();
 
-				const startX = (col * this.sectorSize) + (col * 2);
-				const startY = (row * this.sectorSize) + (row * 2);
-				const finishX = startX + (this.sectorSize - 1);
-				const finishY = startY + (this.sectorSize - 1);
+				const startX = (col * MapSector.SECTOR_SIZE) + (col * 2);
+				const startY = (row * MapSector.SECTOR_SIZE) + (row * 2);
+				const finishX = startX + (MapSector.SECTOR_SIZE - 1);
+				const finishY = startY + (MapSector.SECTOR_SIZE - 1);
 
-				this.map.sectors[row][col] = new MapSector(this.map, sectorConfig.key, startX, startY, finishX, finishY);
+                const canRotate = (typeof sectorConfig.canRotate == "undefined")? true : sectorConfig.canRotate;
+                const canHideOverlays = (typeof sectorConfig.canHideOverlays == "undefined")? true : sectorConfig.canHideOverlays;
+
+                const sector = new MapSector(this.parent, sectorConfig.key, startX, startY, finishX, finishY, canRotate, canHideOverlays);
+
+				this.parent.sectors[row][col] = sector;
 			}
 		}
     }
 
     generateSectors()
     {
-        for(const row of this.map.sectors)
+        for(const row of this.parent.sectors)
         {
             for(const sector of row)
             {
@@ -118,19 +122,19 @@ class MapGenerator
 
     generateSpawn()
     {
-        const sectors = this.map.sectors.flat();
+        const sectors = this.parent.sectors.flat();
 
         // establish spawn tile
         const spawnSector = GAME.chance.pick(sectors);
-        const possibleSpawnTiles = spawnSector.getTilePositions(MapTile.TYPES.FLOOR).map(pos => this.map.getTile(pos.col, pos.row));
+        const possibleSpawnTiles = spawnSector.getTilePositions(MapTile.TYPES.FLOOR).map(pos => this.parent.getTile(pos.col, pos.row));
 
         const spawnTile = GAME.chance.pick(possibleSpawnTiles);
 
         spawnTile.setType(MapTile.TYPES.FLOOR);
 
-        this.map.exploreMapTile(spawnTile.col, spawnTile.row);
+        this.parent.exploreMapTile(spawnTile.col, spawnTile.row);
 
-        this.map.spawnMapTile = spawnTile;
+        this.parent.spawnMapTile = spawnTile;
     }
 
     connectRooms()
@@ -140,9 +144,8 @@ class MapGenerator
 		// each group will have one external connection to the next group to the east (if it exists)
 		// each group will have one external connection to the next group to the south (if it exists)
 		// various internal connections within the group will ensure all rooms are accessible
-		const columns = 4;
-		const rows = 4;
-        const junctionBuffer = 1;
+		const columns = this.parent.sectorCount;
+		const rows = this.parent.sectorCount;
 
 		// groups are formed by iterating over the grid in steps of 2
 		for(let row = 0; row < rows; row += 2)
@@ -158,8 +161,8 @@ class MapGenerator
 					const rowOffsetA = GAME.chance.range(0, 1);
 					const rowOffsetB = GAME.chance.range(0, 1);
 
-					const sectorA = this.map.sectors[row + rowOffsetA][col + 1];
-					const sectorB = this.map.sectors[row + rowOffsetB][col + 2];
+					const sectorA = this.parent.sectors[row + rowOffsetA][col + 1];
+					const sectorB = this.parent.sectors[row + rowOffsetB][col + 2];
 
                     const doorA = this.createDoor(sectorA.doorPositions[DIRECTIONS.EAST]);
                     const doorB = this.createDoor(sectorB.doorPositions[DIRECTIONS.WEST]);
@@ -172,8 +175,8 @@ class MapGenerator
 					const colOffsetA = GAME.chance.range(0, 1);
 					const colOffsetB = GAME.chance.range(0, 1);
 
-					const sectorA = this.map.sectors[row + 1][col + colOffsetA];
-					const sectorB = this.map.sectors[row + 2][col + colOffsetB];
+					const sectorA = this.parent.sectors[row + 1][col + colOffsetA];
+					const sectorB = this.parent.sectors[row + 2][col + colOffsetB];
 
                     const doorA = this.createDoor(sectorA.doorPositions[DIRECTIONS.SOUTH]);
                     const doorB = this.createDoor(sectorB.doorPositions[DIRECTIONS.NORTH]);
@@ -182,10 +185,10 @@ class MapGenerator
 				}
 
 				// establish internal connections (within local group of 4 sectors)
-				const sectorA = this.map.sectors[row][col];
-				const sectorB = this.map.sectors[row][col + 1];
-				const sectorC = this.map.sectors[row + 1][col];
-				const sectorD = this.map.sectors[row + 1][col + 1];
+				const sectorA = this.parent.sectors[row][col];
+				const sectorB = this.parent.sectors[row][col + 1];
+				const sectorC = this.parent.sectors[row + 1][col];
+				const sectorD = this.parent.sectors[row + 1][col + 1];
 
 				const useDoubleInnerSouthernConnection = (GAME.chance.range(0, 1) == 0);
 
@@ -225,14 +228,11 @@ class MapGenerator
 				}
 			}
 		}
-
-        // clean up unused temporary doors
-        this.map.getTilesByType(MapTile.TYPES.GEN_DOOR).forEach(tile => tile.setType(MapTile.TYPES.WALL));
     }
 
     createDoor(pos)
     {
-        const tile = this.map.getTile(pos.col, pos.row);
+        const tile = this.parent.getTile(pos.col, pos.row);
 
         tile.setType(MapTile.TYPES.DOOR);
 
@@ -241,7 +241,7 @@ class MapGenerator
 
     connectTiles(tileA, tileB)
 	{
-		const path = this.map.pathFinder.calculatePath(tileA, tileB, [MapTile.TYPES.DOOR, MapTile.TYPES.GEN_DOOR, MapTile.TYPES.EMPTY, MapTile.TYPES.GEN_JUNCTION]);
+		const path = this.parent.pathFinder.calculatePath(tileA, tileB, [MapTile.TYPES.DOOR, MapTile.TYPES.GEN_DOOR, MapTile.TYPES.EMPTY, MapTile.TYPES.GEN_JUNCTION]);
 
         for(const node of path)
         {
@@ -258,7 +258,7 @@ class MapGenerator
     {
 		// expand the pathways between rooms by converting adjacent unknown (empty) tiles to GEN_EXPANSION tiles
 		// the pathway tiles were set to GEN_PATHWAY in the previous step for easy identification during this step
-		for(const row of this.map.grid)
+		for(const row of this.parent.grid)
         {
             for(const tile of row)
             {
@@ -268,10 +268,10 @@ class MapGenerator
 
                 for(const neighbour of neighbors.filter(candidate => candidate.type == MapTile.TYPES.EMPTY))
                 {
-                    if(neighbour.col == 0 || neighbour.col == this.map.gridCols - 1 || neighbour.row == 0 || neighbour.row == this.map.gridRows - 1) { continue; }
+                    if(neighbour.col == 0 || neighbour.col == this.parent.gridCols - 1 || neighbour.row == 0 || neighbour.row == this.parent.gridRows - 1) { continue; }
 
                     neighbour.type = MapTile.TYPES.GEN_EXPANSION;
-                    this.map.updateMapTile(neighbour);
+                    this.parent.updateMapTile(neighbour);
                 }
             }
         }
@@ -288,7 +288,7 @@ class MapGenerator
         this.sealExpansion();
 
         // convert GEN_WALL tiles in to walls tiles if they have any unknown (empty) neighbors
-        for(const row of this.map.grid)
+        for(const row of this.parent.grid)
         {
             for(const tile of row)
             {
@@ -298,7 +298,7 @@ class MapGenerator
                 const neighbors = tile.getNeighborsByDirection(DIRECTIONS.getAllDirections());
                 const voids = neighbors.reduce((acc, neighbour) => acc + ((neighbour.type === MapTile.TYPES.EMPTY) ? 1 : 0), 0);
                 
-                if(voids > 0 || tile.col == 0 || tile.col == this.map.gridCols - 1 || tile.row == 0 || tile.row == this.map.gridRows - 1)
+                if(voids > 0 || tile.col == 0 || tile.col == this.parent.gridCols - 1 || tile.row == 0 || tile.row == this.parent.gridRows - 1)
                 {
                     tile.setType(MapTile.TYPES.GEN_WALL);
                 }
@@ -314,7 +314,7 @@ class MapGenerator
     {
         // convert any unknown (empty) tiles that are adjacent to GEN_PATHWAY and GEN_EXPANSION tiles in to GEN_WALL tiles
         // these will be candidates for becoming walls in the next step
-		for(const row of this.map.grid)
+		for(const row of this.parent.grid)
         {
             for(const tile of row)
             {
@@ -325,7 +325,7 @@ class MapGenerator
                 for(const neighbour of neighbors.filter(candidate => candidate.type == MapTile.TYPES.EMPTY))
                 {
                     neighbour.type = MapTile.TYPES.GEN_WALL;
-                    this.map.updateMapTile(neighbour);
+                    this.parent.updateMapTile(neighbour);
                 }
             }
         }
@@ -334,7 +334,7 @@ class MapGenerator
     closeVoids(adjacentTypes)
     {
         // convert any empty tiles that are adjacent to two GEN_WALL tiles in to GEN_EXPANSION tiles
-        for(const row of this.map.grid)
+        for(const row of this.parent.grid)
         {
             for(const tile of row)
             {
@@ -359,7 +359,7 @@ class MapGenerator
     sealExpansion()
     {
         // convert any GEN_EXPANSION that are adjacent to void tiles in to GEN_WALL tiles
-        for(const row of this.map.grid)
+        for(const row of this.parent.grid)
         {
             for(const tile of row)
             {
@@ -369,7 +369,7 @@ class MapGenerator
                 const neighbors = tile.getNeighborsByDirection(DIRECTIONS.getAllDirections());
                 const voids = neighbors.reduce((acc, neighbour) => acc + ((neighbour.type === MapTile.TYPES.EMPTY) ? 1 : 0), 0);
                 
-                if(voids > 0 || tile.col == 0 || tile.col == this.map.gridCols - 1 || tile.row == 0 || tile.row == this.map.gridRows - 1)
+                if(voids > 0 || tile.col == 0 || tile.col == this.parent.gridCols - 1 || tile.row == 0 || tile.row == this.parent.gridRows - 1)
                 {
                     tile.setType(MapTile.TYPES.GEN_WALL);
                 }
@@ -379,7 +379,7 @@ class MapGenerator
 
     convertPlaceholders()
     {
-		for(const row of this.map.grid)
+		for(const row of this.parent.grid)
 		{
             for(const tile of row)
             {
@@ -387,8 +387,15 @@ class MapGenerator
                 {
                     tile.setType(MapTile.TYPES.FLOOR);
                 }
-                else if(tile.type === MapTile.TYPES.GEN_WALL)
+                else if(tile.type === MapTile.TYPES.GEN_WALL || tile.type === MapTile.TYPES.GEN_DOOR)
                 {
+                    tile.variant = 0;
+
+                    tile.spritePositions.baseCol = 0;
+                    tile.spritePositions.baseRow = tile.type;
+                    tile.spritePositions.overlayCol = null;
+                    tile.spritePositions.overlayRow = null;
+
                     tile.setType(MapTile.TYPES.WALL);
                 }
             }
@@ -405,20 +412,20 @@ class MapGenerator
     {
         if(!ENV.DEBUG) { return; }
 
-        console.log(`Legendary Encounters: ${this.map.undefeatedLegendaryEnemies}/${this.map.maxLegendaryEnemies}`);
-        console.log(`Epic Encounters: ${this.map.undefeatedEpicEnemies}/${this.map.maxEpicEnemies}`);
-        console.log(`Rare Encounters: ${this.map.undefeatedRareEnemies}/${this.map.maxRareEnemies}`);
+        console.log(`Legendary Encounters: ${this.parent.undefeatedLegendaryEnemies}/${this.parent.maxLegendaryEnemies}`);
+        console.log(`Epic Encounters: ${this.parent.undefeatedEpicEnemies}/${this.parent.maxEpicEnemies}`);
+        console.log(`Rare Encounters: ${this.parent.undefeatedRareEnemies}/${this.parent.maxRareEnemies}`);
 
-        console.log(`Legendary Treasures: ${this.map.undiscoveredLegendaryTreasures}/${this.map.maxLegendaryTreasures}`);
-        console.log(`Epic Treasures: ${this.map.undiscoveredEpicTreasures}/${this.map.maxEpicTreasures}`);
-        console.log(`Rare Treasures: ${this.map.undiscoveredRareTreasures}/${this.map.maxRareTreasures}`);
+        console.log(`Legendary Treasures: ${this.parent.undiscoveredLegendaryTreasures}/${this.parent.maxLegendaryTreasures}`);
+        console.log(`Epic Treasures: ${this.parent.undiscoveredEpicTreasures}/${this.parent.maxEpicTreasures}`);
+        console.log(`Rare Treasures: ${this.parent.undiscoveredRareTreasures}/${this.parent.maxRareTreasures}`);
 
         // explore all the tiles
-        for(let row = 0; row < this.map.gridRows; row++)
+        for(let row = 0; row < this.parent.gridRows; row++)
         {
-            for(let col = 0; col < this.map.gridCols; col++)
+            for(let col = 0; col < this.parent.gridCols; col++)
             {
-                this.map.exploreMapTile(col, row);
+                this.parent.exploreMapTile(col, row);
             }
         }
     }

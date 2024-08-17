@@ -62,7 +62,7 @@ class GFX
         this.context.fillStyle = fillColour;
         this.context.strokeStyle = fillColour;
         this.context.fillRect(x, y, w, h);
-        this.context.strokeRect(x, y, w, h);
+        //this.context.strokeRect(x, y, w, h);
     }
 
     drawRectangleOutline(x, y, w, h, strokeColour, strokeWidth, lineDash = [])
