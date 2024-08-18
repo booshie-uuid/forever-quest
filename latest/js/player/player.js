@@ -88,8 +88,7 @@ class Player extends GameEntity
         const newMapTile = GAME.map.getTile(newCol, newRow);
 
         // yield if the new location is empty or otherwise not a valid tile
-        //if(newMapTile === null) { return; }
-        if(newMapTile === null || newMapTile.type == MapTile.TYPES.EMPTY || newMapTile.type == MapTile.TYPES.WALL) { return; }
+        if(newMapTile === null || newMapTile.type == MapTile.TYPES.EMPTY || !newMapTile.isTraversable) { return; }
 
         // update the players location
         this.col = newCol;

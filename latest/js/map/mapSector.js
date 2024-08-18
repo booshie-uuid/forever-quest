@@ -2,17 +2,19 @@ class MapSector
 {
     static SECTOR_SIZE = 15;
 
-    constructor(map, key, startCol, startRow, finishCol, finishRow, canRotate = true, canHideOverlays = true)
+    constructor(map, config, startCol, startRow, finishCol, finishRow)
 	{
         this.map = map;
-        this.key = key;
+
+        this.config = config;
+        this.key = config.key;
         
         this.isReady = false;
 
-        this.canRotate = canRotate;
-        this.canHideOverlays = canHideOverlays;
+        this.canRotate = (typeof config.disableRotation === "undefined" || config.disableRotation === null)? true : !config.disableRotation;
+        this.canHideOverlays = true;
         
-        this.config = new GameData(`sectors/${key}.json`, this.unpackConfig.bind(this));
+        this.layoutDoc = new GameData(`sectors/${this.key}.json`, this.unpackLayout.bind(this));
         this.layout = null; 
 
 		this.startCol = startCol;
@@ -65,9 +67,9 @@ class MapSector
         return (col >= this.startCol && col <= this.finishX && row >= this.startRow && row <= this.finishY);
     }
 
-    unpackConfig()
+    unpackLayout()
     {
-        this.layout = this.config.data.layout;
+        this.layout = this.layoutDoc.data.layout;
         this.isReady = true;
 
         const rotations = (this.canRotate)? GAME.chance.range(0, 3) : 0;
@@ -121,13 +123,11 @@ class MapSector
         
         switch(type)
         {
-            case MapTile.TYPES.EMPTY: symbol = "."; break;
-            case MapTile.TYPES.WALL: symbol = "#"; break;
-            case MapTile.TYPES.FLOOR: symbol = "%"; break;
-            case MapTile.TYPES.DOOR: symbol = "@"; break;
+            case MapTile.TYPES.GEN_WALL: symbol = "#"; break;
+            case MapTile.TYPES.GEN_PATHWAY: symbol = "*"; break;
+            case MapTile.TYPES.GEN_EXPANSION: symbol = "+"; break;
             case MapTile.TYPES.GEN_DOOR: symbol = "@"; break;
-            case MapTile.TYPES.WATER: symbol = "~"; break;
-            default: symbol = "."; break;
+            default: symbol = type; break;
         }
 
         return symbol;
@@ -139,21 +139,14 @@ class MapSector
         
         switch(symbol)
         {
-            case ".": type = MapTile.TYPES.EMPTY; break;
-            case "#": type = MapTile.TYPES.WALL; break;
-            case "%": type = MapTile.TYPES.FLOOR; break;
+            case "#": type = MapTile.TYPES.GEN_WALL; break;
+            case "*": type = MapTile.TYPES.GEN_PATHWAY; break;
+            case "+": type = MapTile.TYPES.GEN_EXPANSION; break;
             case "@": type = MapTile.TYPES.GEN_DOOR; break;
-            case "~": type = MapTile.TYPES.WATER; break;
-            case "A": 
-            case "B":
-            case "C":
-            case "D":
-            case "E":
-            case "F": 
-            default: type = MapTile.TYPES.EMPTY; break;
+            default: type = parseInt(symbol, 16); break;
         }
 
-        return type;
+        return (isNaN(type))? MapTile.TYPES.EMPTY : type;
     }
 
     decodeTileCode(code)
@@ -195,10 +188,6 @@ class MapSector
                 tile.spritePositions.overlayCol = tileSettings.overlayCol;
                 tile.spritePositions.overlayRow = tileSettings.overlayRow;
 
-                tile.canHideOverlays = this.canHideOverlays;
-
-                tile.variant = tileSettings.baseCol;
-
                 tile.setType(tileSettings.baseRow);           
 
                 if(!Array.isArray(this.tilePositions[tile.type])) { this.tilePositions[tile.type] = []; }
@@ -213,10 +202,10 @@ class MapSector
         {
             const tile = this.map.getTile(position.col, position.row);
 
-            if(tile.variant == 1) { this.doorPositions[DIRECTIONS.NORTH] = position; }
-            if(tile.variant == 2) { this.doorPositions[DIRECTIONS.EAST] = position; }
-            if(tile.variant == 3) { this.doorPositions[DIRECTIONS.SOUTH] = position; }
-            if(tile.variant == 4) { this.doorPositions[DIRECTIONS.WEST] = position; }
+            if(tile.spritePositions.baseCol == 1) { this.doorPositions[DIRECTIONS.NORTH] = position; }
+            if(tile.spritePositions.baseCol == 2) { this.doorPositions[DIRECTIONS.EAST] = position; }
+            if(tile.spritePositions.baseCol == 3) { this.doorPositions[DIRECTIONS.SOUTH] = position; }
+            if(tile.spritePositions.baseCol == 4) { this.doorPositions[DIRECTIONS.WEST] = position; }
         }
     }
 }

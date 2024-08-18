@@ -7,9 +7,9 @@ class GameTexture
         GameTexture.texturePath = path + (path.endsWith("/") ? "" : "/");
     }
 
-    constructor(uri)
+    constructor(path, overwriteBasePath = false)
     {
-        this.uri = GameTexture.texturePath + uri;
+        this.path = ((overwriteBasePath)? "" : GameTexture.texturePath) + path;
         this.isReady = false;
         this.isFaulted = false;
 
@@ -25,7 +25,7 @@ class GameTexture
         this.image = new Image();
         this.image.onerror = () => { this.isFaulted = true; };
         this.image.onload = this.loadTexture.bind(this);
-        this.image.src = this.uri;
+        this.image.src = this.path;
     }
 
     loadTexture()

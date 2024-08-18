@@ -20,14 +20,7 @@
     "specialSectors": [],
 
     "generalSectors": [
-        { "key": "GBD-00-GENERIC-ROOM-00", "canRotate": false },
-        { "key": "GBD-00-GENERIC-ROOM-01" },
-        { "key": "GBD-00-GENERIC-CLUSTER-00" },
-        { "key": "GBD-00-GENERIC-CLUSTER-01" },
-        { "key": "GBD-00-GENERIC-PRISON-00" },
-        { "key": "GBD-00-GENERIC-PRISON-01" },
-        { "key": "GBD-00-GENERIC-CORRIDOR-00" },
-        { "key": "GBD-00-GENERIC-CORRIDOR-01" }
+        { "key": "GBD-00-SHRINE-WATER-00" }
     ],
 
     "commonMapTiles": [

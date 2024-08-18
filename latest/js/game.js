@@ -9,6 +9,8 @@ class GAME
     static keyboard = null;
     static mouse = null;
 
+    static textures = new GameTextureDictionary();
+
     static map = null;
     static player = null;
 

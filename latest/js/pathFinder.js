@@ -31,7 +31,7 @@ class PathFinder
 		return neighbors;
 	}
 
-	calculatePath(startingMapTile, finishingMapTile, allowedTypes = [MapTile.TYPES.FLOOR, MapTile.TYPES.DOOR, MapTile.TYPES.SPECIAL])
+	calculatePath(startingMapTile, finishingMapTile, allowedTypes = [MapTile.TYPES.FLOOR, MapTile.TYPES.DOOR], ignoreTraversability = false)
 	{
 		const path = [];
 
@@ -99,9 +99,7 @@ class PathFinder
 					{
 						const neighbour = neighbors[i];
 
-						let isTraversable = allowedTypes.includes(neighbour.tile.type) && !visitedNodes[neighbour.index];
-
-						if(neighbour.tile.type == MapTile.TYPES.SPECIAL) { isTraversable = neighbour.tile.isTraversable; }
+						let isTraversable = allowedTypes.includes(neighbour.tile.type) && !visitedNodes[neighbour.index] && (ignoreTraversability || neighbour.tile.isTraversable);
 						
 						if(isTraversable)
 						{

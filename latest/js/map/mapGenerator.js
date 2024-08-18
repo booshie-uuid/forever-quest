@@ -92,17 +92,14 @@ class MapGenerator
 
 			for(let col = 0; col < this.parent.sectorCount; col++)
 			{
-                const sectorConfig = sectorConfigs.shift();
+                const config = sectorConfigs.shift();
 
 				const startX = (col * MapSector.SECTOR_SIZE) + (col * 2);
 				const startY = (row * MapSector.SECTOR_SIZE) + (row * 2);
 				const finishX = startX + (MapSector.SECTOR_SIZE - 1);
 				const finishY = startY + (MapSector.SECTOR_SIZE - 1);
 
-                const canRotate = (typeof sectorConfig.canRotate == "undefined")? true : sectorConfig.canRotate;
-                const canHideOverlays = (typeof sectorConfig.canHideOverlays == "undefined")? true : sectorConfig.canHideOverlays;
-
-                const sector = new MapSector(this.parent, sectorConfig.key, startX, startY, finishX, finishY, canRotate, canHideOverlays);
+                const sector = new MapSector(this.parent, config, startX, startY, finishX, finishY);
 
 				this.parent.sectors[row][col] = sector;
 			}
@@ -130,7 +127,7 @@ class MapGenerator
 
         const spawnTile = GAME.chance.pick(possibleSpawnTiles);
 
-        spawnTile.setType(MapTile.TYPES.FLOOR);
+        spawnTile.setTypeWithDefaults(MapTile.TYPES.FLOOR);
 
         this.parent.exploreMapTile(spawnTile.col, spawnTile.row);
 
@@ -234,14 +231,14 @@ class MapGenerator
     {
         const tile = this.parent.getTile(pos.col, pos.row);
 
-        tile.setType(MapTile.TYPES.DOOR);
+        tile.setTypeWithDefaults(MapTile.TYPES.DOOR);
 
         return tile;
     }
 
     connectTiles(tileA, tileB)
 	{
-		const path = this.parent.pathFinder.calculatePath(tileA, tileB, [MapTile.TYPES.DOOR, MapTile.TYPES.GEN_DOOR, MapTile.TYPES.EMPTY, MapTile.TYPES.GEN_JUNCTION]);
+		const path = this.parent.pathFinder.calculatePath(tileA, tileB, [MapTile.TYPES.DOOR, MapTile.TYPES.GEN_DOOR, MapTile.TYPES.EMPTY, MapTile.TYPES.GEN_JUNCTION], true);
 
         for(const node of path)
         {
@@ -249,7 +246,7 @@ class MapGenerator
 
             if(tile.type == MapTile.TYPES.EMPTY)
             {
-                tile.setType(MapTile.TYPES.GEN_PATHWAY);
+                tile.setTypeWithDefaults(MapTile.TYPES.GEN_PATHWAY);
             }
         }
 	}
@@ -270,8 +267,7 @@ class MapGenerator
                 {
                     if(neighbour.col == 0 || neighbour.col == this.parent.gridCols - 1 || neighbour.row == 0 || neighbour.row == this.parent.gridRows - 1) { continue; }
 
-                    neighbour.type = MapTile.TYPES.GEN_EXPANSION;
-                    this.parent.updateMapTile(neighbour);
+                    neighbour.setTypeWithDefaults(MapTile.TYPES.GEN_EXPANSION);
                 }
             }
         }
@@ -300,11 +296,11 @@ class MapGenerator
                 
                 if(voids > 0 || tile.col == 0 || tile.col == this.parent.gridCols - 1 || tile.row == 0 || tile.row == this.parent.gridRows - 1)
                 {
-                    tile.setType(MapTile.TYPES.GEN_WALL);
+                    tile.setTypeWithDefaults(MapTile.TYPES.GEN_WALL);
                 }
                 else
                 {
-                    tile.setType(MapTile.TYPES.GEN_EXPANSION);
+                    tile.setTypeWithDefaults(MapTile.TYPES.GEN_EXPANSION);
                 }
             }
         }
@@ -324,8 +320,7 @@ class MapGenerator
 
                 for(const neighbour of neighbors.filter(candidate => candidate.type == MapTile.TYPES.EMPTY))
                 {
-                    neighbour.type = MapTile.TYPES.GEN_WALL;
-                    this.parent.updateMapTile(neighbour);
+                    neighbour.setTypeWithDefaults(MapTile.TYPES.GEN_WALL);
                 }
             }
         }
@@ -350,7 +345,7 @@ class MapGenerator
                 
                 if(horizontalMatches == 2 || verticalMatches == 2)
                 {
-                    tile.setType(MapTile.TYPES.GEN_EXPANSION);
+                    tile.setTypeWithDefaults(MapTile.TYPES.GEN_EXPANSION);
                 }
             }
         }
@@ -371,7 +366,7 @@ class MapGenerator
                 
                 if(voids > 0 || tile.col == 0 || tile.col == this.parent.gridCols - 1 || tile.row == 0 || tile.row == this.parent.gridRows - 1)
                 {
-                    tile.setType(MapTile.TYPES.GEN_WALL);
+                    tile.setTypeWithDefaults(MapTile.TYPES.GEN_WALL);
                 }
             }
         }
@@ -385,27 +380,14 @@ class MapGenerator
             {
                 if(tile.type === MapTile.TYPES.GEN_PATHWAY || tile.type === MapTile.TYPES.GEN_EXPANSION)
                 {
-                    tile.setType(MapTile.TYPES.FLOOR);
+                    tile.setTypeWithDefaults(MapTile.TYPES.FLOOR);
                 }
                 else if(tile.type === MapTile.TYPES.GEN_WALL || tile.type === MapTile.TYPES.GEN_DOOR)
                 {
-                    tile.variant = 0;
-
-                    tile.spritePositions.baseCol = 0;
-                    tile.spritePositions.baseRow = tile.type;
-                    tile.spritePositions.overlayCol = null;
-                    tile.spritePositions.overlayRow = null;
-
-                    tile.setType(MapTile.TYPES.WALL);
+                    tile.setTypeWithDefaults(MapTile.TYPES.WALL);
                 }
             }
 		}
-    }
-
-    generateEncounter(tile, rarity)
-    {
-        tile.setType(MapTile.TYPES.ENCOUNTER);
-        tile.rarity = rarity;
     }
 
     handleDebug()

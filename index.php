@@ -31,7 +31,6 @@
     </script>
 
     <!-- helpers -->
-    <script src="<?= $ENV->release ?>/js/game.js"></script>
     <script src="<?= $ENV->release ?>/js/number.js"></script>
     <script src="<?= $ENV->release ?>/js/grammar.js"></script>
     <script src="<?= $ENV->release ?>/js/sharedChance.js"></script>
@@ -45,7 +44,9 @@
     <script src="<?= $ENV->release ?>/js/lootable.js"></script>
     <script src="<?= $ENV->release ?>/js/gameData.js"></script>
     <script src="<?= $ENV->release ?>/js/gameTexture.js"></script>
+    <script src="<?= $ENV->release ?>/js/gameTextureDictionary.js"></script>
     <script src="<?= $ENV->release ?>/js/gameEvent.js"></script>
+    <script src="<?= $ENV->release ?>/js/game.js"></script>
 
     <!-- globals -->
     <script src="<?= $ENV->release ?>/js/gameEventQueue.js"></script>

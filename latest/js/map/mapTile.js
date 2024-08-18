@@ -2,6 +2,13 @@ class MapTile
 {
     static TILE_SIZE = 32;
 
+    static OVERLAY_STYLES = {
+        INVISIBLE: 0,
+        ALWAYS_VISIBLE: 1,
+        HORIZONTAL_ONLY: 2,
+        VERTICAL_ONLY: 3
+    }
+
     static TYPES = {
         DEBUG: -666,
         GEN_DOOR: -1,
@@ -36,13 +43,12 @@ class MapTile
     {
         this.parent = parentMap;
 
-        const [col, row, status, type, variant, rarity, brightness, isActivated, isCorner, isNearDoor, isNearColumn] = data;
+        const [col, row, status, type, rarity, brightness, isActivated] = data;
 
         this.col = (typeof col !== "undefined")? col: 0;
         this.row = (typeof row !== "undefined")? row: 0;
         this.status = (typeof status !== "undefined")? status: 0;
         this.type = (typeof type !== "undefined")? type: 0;
-        this.variant = (typeof variant !== "undefined")? variant: 0;
         this.rarity = (typeof rarity !== "undefined")? rarity: 0;
 
         this.spritePositions = { baseCol: null, baseRow: null, overlayCol: null, overlayRow: null };
@@ -55,6 +61,7 @@ class MapTile
         this.isRevealed = false;
         this.isActivated = (typeof isActivated !== "undefined")? isActivated: false;
 
+        this.overlayStyle = MapTile.OVERLAY_STYLES.INVISIBLE;
         this.canHideOverlays = true;
 
         // cached results of calculated checks
@@ -111,41 +118,35 @@ class MapTile
         return neighbor.type != MapTile.TYPES.EMPTY;
     }
 
+    refreshState()
+    {
+        // activation state can't be changed by a refresh
+        // this.isActivated = this.isActivated;
+
+        const traversableTypes = [MapTile.TYPES.FLOOR, MapTile.TYPES.DOOR];
+        this.isTraversable = traversableTypes.includes(this.type);
+    }
+
     setType(type)
     {
         this.type = type;
 
-        const traversableTypes = [MapTile.TYPES.FLOOR, MapTile.TYPES.DOOR, MapTile.TYPES.SPECIAL];
-        this.isTraversable = traversableTypes.includes(type);
-
-        if(this.type == MapTile.TYPES.SPECIAL && ["A", "B", "C"].includes(this.symbol))
-        {
-            this.isTraversable = false;
-        }
-
-        if(this.type == MapTile.TYPES.DOOR)
-        {
-            this.variant = (this.isActivated)? 1 : 0;
-        }
-
-        this.spritePositions.baseCol = this.getRenderVariant();
-        this.spritePositions.baseRow = this.type;
+        this.refreshState();
     }
 
-    getRenderVariant()
+    setTypeWithDefaults(type)
     {
-        let variant = this.variant;
-
-        if(this.type == MapTile.TYPES.DOOR)
+        if(type == MapTile.TYPES.DOOR)
         {
-            variant = (this.isActivated)? 1 : 0;
-        }
-        else if(this.type == MapTile.TYPES.WALL && variant > 7 && !this.isHorizontal())
-        {
-            variant = variant - 8;
+            this.isActivated = false;
         }
 
-        return variant;
+        this.spritePositions.baseCol = 0;
+        this.spritePositions.baseRow = type;
+        this.spritePositions.overlayCol = null;
+        this.spritePositions.overlayRow = null;
+
+        this.setType(type);
     }
 
     getNeighborsByDirection(directions)

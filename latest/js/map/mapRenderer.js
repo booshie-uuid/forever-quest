@@ -3,7 +3,6 @@ class MapRenderer
     constructor(parentMap)
     {
         this.parent = parentMap;
-        this.texture = parentMap.texture;
         this.theme = parentMap.biome.theme;
 
         this.drawOffsetX = 12;
@@ -126,7 +125,9 @@ class MapRenderer
         const spriteX = 34 + (spriteCol * 33);
         const spriteY = 1 + (spriteRow * 33);
 
-        GAME.gfx.buffer.drawSprite(this.texture, spriteX, spriteY, renderX, renderY, MapTile.TILE_SIZE, MapTile.TILE_SIZE);
+        const texture = GAME.textures.getTexture("map");
+
+        GAME.gfx.buffer.drawSprite(texture, spriteX, spriteY, renderX, renderY, MapTile.TILE_SIZE, MapTile.TILE_SIZE);
     }
 
     renderTile(tile)

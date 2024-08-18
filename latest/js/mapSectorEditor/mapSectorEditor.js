@@ -88,14 +88,14 @@ class MapSectorEditor
 				const finishCol = startCol + (this.sectorSize - 1);
 				const finishRow = startRow + (this.sectorSize - 1);
 
-                this.sector = new MapSector(this.map, this.sectorKey, startCol, startRow, finishCol, finishRow, false);
+                this.sector = new MapSector(this.map, {key: this.sectorKey, disableRotation: true}, startCol, startRow, finishCol, finishRow);
                 
                 this.state = MapSectorEditor.STATES.LOADING_SECTOR;
             }
         }
         else if(this.state === MapSectorEditor.STATES.LOADING_SECTOR)
         {
-            this.spritePicker = new SpritePickerGUI(this.map.biome, this.map.texture);
+            this.spritePicker = new SpritePickerGUI(this.map.biome);
 
             if(this.sector.isReady)
             {
@@ -185,7 +185,7 @@ class MapSectorEditor
     {
         const symbol = this.spritePicker.selectedSymbol;
 
-        if(symbol !== "@") { return; }
+        if(symbol !== 4) { return; }
 
         const doorDirection = this.calculateDoorPosition(tile);
 
@@ -208,7 +208,6 @@ class MapSectorEditor
 
         tile.type = MapTile.TYPES.DOOR;
         tile.isActivated = false;
-        tile.variant = variant;
 
         tile.spritePositions.baseCol = variant;
         tile.spritePositions.baseRow = MapTile.TYPES.DOOR;
@@ -218,7 +217,7 @@ class MapSectorEditor
     {
         const symbol = this.spritePicker.selectedSymbol;
 
-        if(!["A", "B", "C", "D", "E", "F"].includes(symbol)) { return; }
+        if(symbol < 8 || symbol > 15) { return; }
 
         tile.spritePositions.overlayCol = this.spritePicker.currentVariant;
         tile.spritePositions.overlayRow = parseInt(symbol, 16);
@@ -228,13 +227,12 @@ class MapSectorEditor
     {
         const symbol = this.spritePicker.selectedSymbol;
 
-        if(!["#", "%", "~"].includes(symbol)) { return; }
+        if(symbol < 1 || symbol > 3) { return; }
 
         let type = this.sector.getTypeFromSymbol(symbol);
         let variant = this.spritePicker.currentVariant;
 
         // override the type & variant if the tile is being removed
-        tile.variant = variant;
         tile.symbol = symbol;
         
         tile.spritePositions.baseCol = variant;
@@ -245,8 +243,17 @@ class MapSectorEditor
 
     getCode(tile)
     {
+        let type = tile.type;
+
+        switch(type)
+        {
+            case MapTile.TYPES.DEBUG: type = MapTile.TYPES.EMPTY; break;
+            case MapTile.TYPES.DOOR: type = MapTile.TYPES.GEN_DOOR; break;
+            default: break;
+        }
+
         const baseCol = tile.spritePositions.baseCol.toString(16);
-        const baseRow = this.sector.getSymbolFromType(tile.type);
+        const baseRow = this.sector.getSymbolFromType(type);
         const overlayCol = (tile.spritePositions.overlayCol === null)? "" : tile.spritePositions.overlayCol.toString(16);
         const overlayRow = (tile.spritePositions.overlayRow === null)? "" : tile.spritePositions.overlayRow.toString(16);
 
@@ -262,12 +269,11 @@ class MapSectorEditor
         const sectorCol = Math.floor(tile.col - this.sector.startCol);
         const sectorRow = Math.floor(tile.row - this.sector.startRow);
 
-        console.log(`MAP COL: ${tile.col}, MAP ROW: ${tile.row}, TILE: ${tile.type}, VARIANT: ${tile.variant}`);
+        console.log(`MAP COL: ${tile.col}, MAP ROW: ${tile.row}, TILE: ${tile.type}, VARIANT: ${tile.spritePositions.baseCol}, OVERLAY: ${tile.spritePositions.overlayCol}`);
         console.log(`SEC COL: ${sectorCol}, SEC ROW: ${sectorRow}`);
 
         if(isRemoveMode)
         {
-            tile.variant = 0;
             tile.spritePositions.baseCol = 0;
             tile.spritePositions.baseRow = 0;
             tile.spritePositions.overlayCol = null;
@@ -349,22 +355,22 @@ class MapSectorEditor
 
     highlightHiddenVariants()
     {
-        const sensitiveTypes = [MapTile.TYPES.WALL];
+        // const sensitiveTypes = [MapTile.TYPES.WALL];
 
-        for(const row of this.map.grid)
-        {
-            for(const tile of row.filter(candidate => this.sector.isWithinSector(candidate) && sensitiveTypes.includes(candidate.type)))
-            {
-                if(tile.variant === tile.getRenderVariant()) { continue; }
+        // for(const row of this.map.grid)
+        // {
+        //     for(const tile of row.filter(candidate => this.sector.isWithinSector(candidate) && sensitiveTypes.includes(candidate.type)))
+        //     {
+        //         if(tile.variant === tile.getRenderVariant()) { continue; }
 
-                const screenPos = this.map.renderer.getScreenPos(tile);
-                const drawX = screenPos.x;
-                const drawY = screenPos.y;
-                const drawSize = this.map.renderer.outerDrawSize;
+        //         const screenPos = this.map.renderer.getScreenPos(tile);
+        //         const drawX = screenPos.x;
+        //         const drawY = screenPos.y;
+        //         const drawSize = this.map.renderer.outerDrawSize;
 
-                GAME.gfx.main.drawRectangleOutline(drawX, drawY, drawSize, drawSize, "#b13e53", 2, [1, 3]);
-            }
-        }
+        //         GAME.gfx.main.drawRectangleOutline(drawX, drawY, drawSize, drawSize, "#b13e53", 2, [1, 3]);
+        //     }
+        // }
     }
 
     highlightDoorDirections()
@@ -379,7 +385,7 @@ class MapSectorEditor
 
             let label = "?";
 
-            switch(door.variant)
+            switch(door.spritePositions.baseCol)
             {
                 case 1: label = "N"; break;
                 case 2: label = "E"; break;

@@ -8,7 +8,7 @@ class Map
         MAP_READY: 4
     }
 
-    constructor(shouldDisableGeneration = false)
+    constructor(disableGeneration = false)
     {
         // key dependencies
         this.biome = new MapBiome("elven-ruins-standard");
@@ -19,7 +19,7 @@ class Map
 
         // map state and other important flags
         this.state = Map.STATES.LOADING_DATA;
-        this.isGenerationDisabled = shouldDisableGeneration;
+        this.isGenerationDisabled = disableGeneration;
 
         // map grid and grid properties
         this.grid = null;
@@ -73,7 +73,7 @@ class Map
                 const welcomeMessage = new ChatMessage(ChatMessage.TYPES.SPECIAL, GameEntity.SPECIAL_ENTITIES.NARRATOR, `Welcome to the ${this.biome.name}.`);
                 GEQ.enqueue(new GameEvent(GameEvent.TYPES.MESSAGE, welcomeMessage.source, welcomeMessage));
 
-                this.texture = new GameTexture(`biomes/${this.biome.theme.spriteSheet}`);
+                GAME.textures.requestTexture("map", `biomes/${this.biome.theme.spriteSheet}`);
 
                 this.state = Map.STATES.LOADING_TEXTURES;
             }
@@ -81,9 +81,10 @@ class Map
         else if(this.state == Map.STATES.LOADING_TEXTURES)
         {
             // check to see if the data is ready
-            const areTexturesReady = this.texture.isReady;
+            const texture = GAME.textures.getTexture("map");
+            const isTextureReady = texture.isReady;
 
-            if(areTexturesReady)
+            if(isTextureReady)
             {
                 this.state = Map.STATES.GENERATING_MAP;
 
@@ -177,13 +178,5 @@ class Map
         tile.isRevealed = true;
 
         this.renderer.renderTile(tile);
-
-        // let neighbors = tile.getNeighborsByDirection(DIRECTIONS.getKeyDirections());
-
-        // for(const neighbor of neighbors)
-        // {
-        //     neighbor.status = (neighbor.status === 0)? 1: neighbor.status; // 1 = revealed
-        //     this.updateMapTile(neighbor);
-        // }
     }
 }

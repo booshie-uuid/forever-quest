@@ -1,12 +1,11 @@
 class SpritePickerGUI
 {
-    constructor(biome, texture)
+    constructor(biome)
     {
         this.biome = biome;
-        this.texture = texture;
 
         this.symbols = ["#", "%", "~", "@", "A", "B", "C", "D", "E", "F"];
-        this.selectedSymbol = "#";
+        this.selectedSymbol = 1;
         this.currentVariant = 0;
 
         this.controlSize = 36;
@@ -37,17 +36,11 @@ class SpritePickerGUI
 
         if(x >= leftDrawX && x <= leftDrawX + this.controlSize && y >= leftDrawY && y <= leftDrawY + this.controlSize)
         {
-            let index = this.symbols.indexOf(this.selectedSymbol);
-            index = (index - 1 < 0)? this.symbols.length - 1: index - 1;
-
-            this.selectedSymbol = this.symbols[index];
+            this.selectedSymbol = Number.limit(this.selectedSymbol - 1, 1, 15);
         }
         else if(x >= rightDrawX && x <= rightDrawX + this.controlSize && y >= rightDrawY && y <= rightDrawY + this.controlSize)
         {
-            let index = this.symbols.indexOf(this.selectedSymbol);
-            index = (index + 1 >= this.symbols.length)? 0: index + 1;
-
-            this.selectedSymbol = this.symbols[index];
+            this.selectedSymbol = Number.limit(this.selectedSymbol + 1, 1, 15);
         }
         else
         {
@@ -92,8 +85,6 @@ class SpritePickerGUI
 
     drawSpriteBar()
     {
-        const location = this.biome.getSpriteLocationBySymbol(this.selectedSymbol);
-
         const controlOffset = this.controlSize + this.controlPadding;
 
         for(let variant = 0; variant < this.spriteVariants; variant++)
@@ -103,12 +94,12 @@ class SpritePickerGUI
 
             GAME.gfx.main.drawRectangleOutline(drawX, drawY, this.spriteButtonSize, this.spriteButtonSize, "#566c86", 2);
 
-            if(location === null) { continue; }
-
-            const spriteX = location.offsetX + (variant * location.spacing);
-            const spriteY = location.offsetY;
+            const spriteX = 34 + (variant * 33);
+            const spriteY = 1 + (this.selectedSymbol * 33);
             
-            GAME.gfx.main.drawSprite(this.texture, spriteX, spriteY, drawX + 2, drawY + 2, 32, 32);
+            const texture = GAME.textures.getTexture("map");
+
+            GAME.gfx.main.drawSprite(texture, spriteX, spriteY, drawX + 2, drawY + 2, 32, 32);
         }
     }
 
@@ -124,7 +115,7 @@ class SpritePickerGUI
 
     drawMessages()
     {
-        if(this.selectedSymbol == "#" && this.currentVariant > 7)
+        if(this.selectedSymbol == 4 && this.currentVariant > 7)
         {
             const message = "ONLY SHOWN WHEN HORIZONTAL";
             const messageSize = GAME.gfx.main.measureText(message, 12, true);
