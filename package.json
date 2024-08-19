@@ -1,0 +1,10 @@
+{
+    "name": "forever-quest",
+    "version": "202408-20",
+    "description": "an online dungeon crawler game",
+    "type": "module",
+    "dependencies": {
+        "express": "^4.19.2",
+        "socket.io": "^4.7.5"
+    }
+}

@@ -1,0 +1,70 @@
+<html lang="en">
+<head>
+    
+    <meta charset="utf-8"/>
+    <meta http-equiv="Content-Language" content="en">
+    <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1, maximum-scale=1, user-scalable=0"/>
+
+    <title>Forever Quest</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Red+Hat+Display:ital,wght@0,300..900;1,300..900&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" type="text/css" href="latest/css/main.css"/>
+
+    <!-- helpers -->
+    <script src="latest/js/number.js"></script>
+    <script src="latest/js/grammar.js"></script>
+    <script src="latest/js/sharedChance.js"></script>
+    <script src="latest/js/gfx.js"></script>
+    <script src="latest/js/mouse.js"></script>
+    <script src="latest/js/keyboard.js"></script>
+    <script src="latest/js/directions.js"></script>
+
+    <!-- base types -->
+    <script src="latest/js/gameEntity.js"></script>
+    <script src="latest/js/lootable.js"></script>
+    <script src="latest/js/gameData.js"></script>
+    <script src="latest/js/gameTexture.js"></script>
+    <script src="latest/js/gameTextureDictionary.js"></script>
+    <script src="latest/js/gameEvent.js"></script>
+    <script src="latest/js/game.js"></script>
+
+    <!-- globals -->
+    <script src="latest/js/gameEventQueue.js"></script>
+
+    <!-- game scripts -->
+    <script src="latest/js/encounter.js"></script>
+    <script src="latest/js/discoverable.js"></script>
+    <script src="latest/js/pathFinder.js"></script>
+    <script src="latest/js/map/mapTile.js"></script>
+    <script src="latest/js/map/mapBiome.js"></script>
+    <script src="latest/js/map/mapSector.js"></script>
+    <script src="latest/js/map/mapRenderer.js"></script>
+    <script src="latest/js/map/mapGenerator.js"></script>
+    <script src="latest/js/map/map.js"></script>
+    <script src="latest/js/chatMessage.js"></script>
+    <script src="latest/js/chat.js"></script>
+    <script src="latest/js/engine.js"></script>
+    <script src="latest/js/player/playerRenderer.js"></script>
+    <script src="latest/js/player/player.js"></script>
+
+</head>
+<body>
+
+<div class="container">
+    <canvas id="display" width="800" height="600"></canvas>
+    <div id="chatbox" class="chatbox"></div>
+</div>
+
+<canvas id="buffer" style="display:none;visbility:hidden;"></canvas>
+
+<script type="text/javascript">
+
+const engine = new Engine("latest", "chatbox", "display");
+
+</script>
+
+</body>
+</html>
